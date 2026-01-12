@@ -75,3 +75,8 @@ form.addEventListener("submit", async (e) => {
     setStatus("Listo.");
   } catch (err) {
     output.textContent = "Error.";
+    setStatus(err?.message || "Error al generar.");
+  } finally {
+      submitBtn.disabled = false;
+    }
+  });
