@@ -13,31 +13,54 @@
         <h1>UX Output Form</h1>
         <p class="sub">Llena el brief. Genero un output estructurado (Project Overview → Research → Flows).</p>
       </div>
+      <div class="header-actions">
+        <div class="progress-badge" id="progressBadge">
+          <span class="progress-text">0/10 secciones</span>
+        </div>
+        <button type="button" class="btn secondary" id="loadExampleBtn" title="Cargar ejemplo">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Ejemplo
+        </button>
+        <button type="button" class="btn secondary" id="clearDraftBtn" title="Limpiar borrador guardado">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1m2 0v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h10z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Limpiar
+        </button>
+      </div>
     </div>
 
     <div class="shell">
       <!-- LEFT: FORM -->
       <section class="panel">
         <div class="panel-inner">
-          <form id="uxForm">
+          <form id="uxForm" novalidate>
 
   <!-- 1. PROJECT IDENTITY -->
-  <div class="card">
-    <div class="card-title"><h2>1. Project Identity</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>Project Name</label>
-      <input class="input" name="projectName" required placeholder="Good Manual" />
+  <div class="card" data-section="1">
+    <div class="card-title">
+      <h2>1. Project Identity</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>One-sentence Description (max 200 chars)</label>
-      <input class="input" name="oneSentence" maxlength="200" required placeholder="App móvil para..." />
+      <label for="projectName">Project Name</label>
+      <input class="input" id="projectName" name="projectName" required placeholder="Good Manual" />
     </div>
 
     <div class="field">
-      <label>Product Type</label>
-      <select name="productType" required>
+      <label for="oneSentence">One-sentence Description <span class="char-counter" data-max="200">0/200</span></label>
+      <input class="input" id="oneSentence" name="oneSentence" maxlength="200" required placeholder="App móvil para..." />
+    </div>
+
+    <div class="field">
+      <label for="productType">Product Type</label>
+      <select id="productType" name="productType" required>
         <option value="" selected disabled>Selecciona…</option>
         <option value="App">App</option>
         <option value="Platform">Platform</option>
@@ -49,171 +72,248 @@
     </div>
 
     <div class="field">
-      <label>Primary Platform(s) (multi-select)</label>
-      <select name="primaryPlatforms" id="primaryPlatforms" multiple required>
-        <option value="Mobile">Mobile</option>
-        <option value="Web">Web</option>
-        <option value="Desktop">Desktop</option>
-        <option value="Tablet">Tablet</option>
-        <option value="Physical">Physical</option>
-        <option value="Hybrid">Hybrid</option>
-      </select>
-      <p class="sub">Tip: Ctrl/Command para seleccionar varias.</p>
+      <label>Primary Platform(s)</label>
+      <div class="checkbox-grid" id="primaryPlatformsContainer">
+        <label class="checkbox-item">
+          <input type="checkbox" name="primaryPlatforms" value="Mobile" />
+          <span>Mobile</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" name="primaryPlatforms" value="Web" />
+          <span>Web</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" name="primaryPlatforms" value="Desktop" />
+          <span>Desktop</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" name="primaryPlatforms" value="Tablet" />
+          <span>Tablet</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" name="primaryPlatforms" value="Physical" />
+          <span>Physical</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" name="primaryPlatforms" value="Hybrid" />
+          <span>Hybrid</span>
+        </label>
+      </div>
     </div>
 
-    <!-- System field -->
     <input type="hidden" name="status" value="Draft" />
   </div>
 
   <!-- 2. PROBLEM & CONTEXT -->
-  <div class="card">
-    <div class="card-title"><h2>2. Problem & Context</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>Real-world situation</label>
-      <textarea name="realWorldSituation" required placeholder="¿Qué está pasando hoy? ¿Quién lo vive? ¿Con qué frecuencia?"></textarea>
+  <div class="card" data-section="2">
+    <div class="card-title">
+      <h2>2. Problem & Context</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>What goes wrong?</label>
-      <textarea name="whatGoesWrong" required placeholder="¿Qué falla y qué consecuencias tiene? (tiempo, costos, frustración)"></textarea>
+      <label for="realWorldSituation">Real-world situation</label>
+      <textarea id="realWorldSituation" name="realWorldSituation" required placeholder="¿Qué está pasando hoy? ¿Quién lo vive? ¿Con qué frecuencia?"></textarea>
     </div>
 
     <div class="field">
-      <label>Current workarounds</label>
-      <textarea name="currentWorkarounds" required placeholder="¿Qué hacen hoy? ¿Qué herramientas usan? ¿Por qué no funciona?"></textarea>
+      <label for="whatGoesWrong">What goes wrong?</label>
+      <textarea id="whatGoesWrong" name="whatGoesWrong" required placeholder="¿Qué falla y qué consecuencias tiene? (tiempo, costos, frustración)"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="currentWorkarounds">Current workarounds</label>
+      <textarea id="currentWorkarounds" name="currentWorkarounds" required placeholder="¿Qué hacen hoy? ¿Qué herramientas usan? ¿Por qué no funciona?"></textarea>
     </div>
   </div>
 
   <!-- 3. USER EVIDENCE -->
-  <div class="card">
-    <div class="card-title"><h2>3. User Evidence</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>User role & context (not persona)</label>
-      <input class="input" name="userRoleContext" required placeholder='Ej: "Técnicos aeronáuticos en hangar..."' />
+  <div class="card" data-section="3">
+    <div class="card-title">
+      <h2>3. User Evidence</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>What they're trying to accomplish</label>
-      <textarea name="tryingToAccomplish" required placeholder="Objetivo + por qué importa"></textarea>
+      <label for="userRoleContext">User role & context (not persona)</label>
+      <input class="input" id="userRoleContext" name="userRoleContext" required placeholder='Ej: "Técnicos aeronáuticos en hangar..."' />
     </div>
 
     <div class="field">
-      <label>Research backing (select + details)</label>
-      <div class="radio-list" style="margin-top:10px;">
-        <label class="radio"><input type="checkbox" name="researchBacking" value="User interviews" /> <span>User interviews (n=__)</span></label>
-        <label class="radio"><input type="checkbox" name="researchBacking" value="Surveys/Analytics" /> <span>Surveys/Analytics (n=__)</span></label>
-        <label class="radio"><input type="checkbox" name="researchBacking" value="Observation/Desk research" /> <span>Observation/Desk research</span></label>
-        <label class="radio"><input type="checkbox" name="researchBacking" value="No research yet (hypothesis)" /> <span>No research yet (hypothesis)</span></label>
+      <label for="tryingToAccomplish">What they're trying to accomplish</label>
+      <textarea id="tryingToAccomplish" name="tryingToAccomplish" required placeholder="Objetivo + por qué importa"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Research backing</label>
+      <div class="radio-list">
+        <label class="radio">
+          <input type="checkbox" name="researchBacking" value="User interviews" />
+          <span>User interviews (n=__)</span>
+        </label>
+        <label class="radio">
+          <input type="checkbox" name="researchBacking" value="Surveys/Analytics" />
+          <span>Surveys/Analytics (n=__)</span>
+        </label>
+        <label class="radio">
+          <input type="checkbox" name="researchBacking" value="Observation/Desk research" />
+          <span>Observation/Desk research</span>
+        </label>
+        <label class="radio">
+          <input type="checkbox" name="researchBacking" value="No research yet (hypothesis)" />
+          <span>No research yet (hypothesis)</span>
+        </label>
       </div>
 
-      <textarea name="researchBackingDetails" required placeholder="Key findings or quotes (incluye n= si aplica)"></textarea>
+      <label for="researchBackingDetails" style="margin-top: 14px; display: block;">Details</label>
+      <textarea id="researchBackingDetails" name="researchBackingDetails" required placeholder="Key findings or quotes (incluye n= si aplica)"></textarea>
     </div>
   </div>
 
   <!-- 4. VALUE HYPOTHESIS -->
-  <div class="card">
-    <div class="card-title"><h2>4. Value Hypothesis</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>Desired outcome (outcome + indicator)</label>
-      <textarea name="desiredOutcome" required placeholder="¿Cómo sería mejor? ¿Cómo sabría el usuario que funcionó?"></textarea>
+  <div class="card" data-section="4">
+    <div class="card-title">
+      <h2>4. Value Hypothesis</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>Why they'd use this</label>
-      <textarea name="whyUseThis" required placeholder="Core value prop + cambio de comportamiento esperado"></textarea>
+      <label for="desiredOutcome">Desired outcome (outcome + indicator)</label>
+      <textarea id="desiredOutcome" name="desiredOutcome" required placeholder="¿Cómo sería mejor? ¿Cómo sabría el usuario que funcionó?"></textarea>
     </div>
 
     <div class="field">
-      <label>Product Goals (pick 2-3, bullets)</label>
-      <textarea name="productGoals" required placeholder="• Reducir tiempo de X a Y&#10;• Aumentar visibilidad de Z"></textarea>
+      <label for="whyUseThis">Why they'd use this</label>
+      <textarea id="whyUseThis" name="whyUseThis" required placeholder="Core value prop + cambio de comportamiento esperado"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="productGoals">Product Goals (pick 2-3, bullets)</label>
+      <textarea id="productGoals" name="productGoals" required placeholder="• Reducir tiempo de X a Y&#10;• Aumentar visibilidad de Z"></textarea>
     </div>
   </div>
 
   <!-- 5. SCOPE -->
-  <div class="card">
-    <div class="card-title"><h2>5. Scope</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>Must-Have Features (3-5 bullets)</label>
-      <textarea name="mustHaveFeatures" required placeholder="• ..."></textarea>
+  <div class="card" data-section="5">
+    <div class="card-title">
+      <h2>5. Scope</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>Nice-to-Have (optional)</label>
-      <textarea name="niceToHave" placeholder="• ..."></textarea>
+      <label for="mustHaveFeatures">Must-Have Features (3-5 bullets)</label>
+      <textarea id="mustHaveFeatures" name="mustHaveFeatures" required placeholder="• ..."></textarea>
     </div>
 
     <div class="field">
-      <label>Out of Scope (optional)</label>
-      <textarea name="outOfScope" placeholder="• ..."></textarea>
+      <label for="niceToHave">Nice-to-Have (optional)</label>
+      <textarea id="niceToHave" name="niceToHave" placeholder="• ..."></textarea>
+    </div>
+
+    <div class="field">
+      <label for="outOfScope">Out of Scope (optional)</label>
+      <textarea id="outOfScope" name="outOfScope" placeholder="• ..."></textarea>
     </div>
   </div>
 
   <!-- 6. CONSTRAINTS -->
-  <div class="card">
-    <div class="card-title"><h2>6. Constraints</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>Technical & Platform</label>
-      <textarea name="technicalPlatformConstraints" required placeholder="Limitaciones técnicas, devices, APIs, performance needs"></textarea>
+  <div class="card" data-section="6">
+    <div class="card-title">
+      <h2>6. Constraints</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>Business & Timeline</label>
-      <textarea name="businessTimelineConstraints" required placeholder="Budget, equipo, deadlines, stakeholders"></textarea>
+      <label for="technicalPlatformConstraints">Technical & Platform</label>
+      <textarea id="technicalPlatformConstraints" name="technicalPlatformConstraints" required placeholder="Limitaciones técnicas, devices, APIs, performance needs"></textarea>
     </div>
 
     <div class="field">
-      <label>Adoption Risks</label>
-      <textarea name="adoptionRisks" required placeholder="Barriers, competencia, resistencia al cambio"></textarea>
+      <label for="businessTimelineConstraints">Business & Timeline</label>
+      <textarea id="businessTimelineConstraints" name="businessTimelineConstraints" required placeholder="Budget, equipo, deadlines, stakeholders"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="adoptionRisks">Adoption Risks</label>
+      <textarea id="adoptionRisks" name="adoptionRisks" required placeholder="Barriers, competencia, resistencia al cambio"></textarea>
     </div>
   </div>
 
   <!-- 7. SUCCESS METRICS -->
-  <div class="card">
-    <div class="card-title"><h2>7. Success Metrics</h2><span class="req">Required</span></div>
+  <div class="card" data-section="7">
+    <div class="card-title">
+      <h2>7. Success Metrics</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
+    </div>
 
     <div class="field">
-      <label>Key Metrics (2-4)</label>
-      <textarea name="keyMetrics" required placeholder="Task completion: 45% → 80% en Q1&#10;Weekly retention: Target 60%"></textarea>
+      <label for="keyMetrics">Key Metrics (2-4)</label>
+      <textarea id="keyMetrics" name="keyMetrics" required placeholder="Task completion: 45% → 80% en Q1&#10;Weekly retention: Target 60%"></textarea>
     </div>
   </div>
 
   <!-- 8. ASSUMPTIONS CHECK -->
-  <div class="card">
-    <div class="card-title"><h2>8. Assumptions Check</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>What you KNOW (facts) — include source</label>
-      <textarea name="facts" required placeholder="Hechos confirmados + fuente"></textarea>
+  <div class="card" data-section="8">
+    <div class="card-title">
+      <h2>8. Assumptions Check</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>What you ASSUME</label>
-      <textarea name="assumptions" required placeholder="Hipótesis clave que podrían ser falsas"></textarea>
+      <label for="facts">What you KNOW (facts) — include source</label>
+      <textarea id="facts" name="facts" required placeholder="Hechos confirmados + fuente"></textarea>
     </div>
 
     <div class="field">
-      <label>What needs validation</label>
-      <input class="input" name="needsValidation" required placeholder="Qué validar antes/después de diseñar" />
+      <label for="assumptions">What you ASSUME</label>
+      <textarea id="assumptions" name="assumptions" required placeholder="Hipótesis clave que podrían ser falsas"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="needsValidation">What needs validation</label>
+      <input class="input" id="needsValidation" name="needsValidation" required placeholder="Qué validar antes/después de diseñar" />
     </div>
   </div>
 
   <!-- 9. PERSONA ESSENTIALS -->
-  <div class="card">
-    <div class="card-title"><h2>9. Persona Essentials</h2><span class="req">Required</span></div>
-
-    <div class="field">
-      <label>Age range & Occupation</label>
-      <input class="input" name="ageOccupation" required placeholder="25–35, Técnico de mantenimiento..." />
+  <div class="card" data-section="9">
+    <div class="card-title">
+      <h2>9. Persona Essentials</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
     </div>
 
     <div class="field">
-      <label>Tech proficiency</label>
-      <select name="techProficiency" required>
+      <label for="ageOccupation">Age range & Occupation</label>
+      <input class="input" id="ageOccupation" name="ageOccupation" required placeholder="25–35, Técnico de mantenimiento..." />
+    </div>
+
+    <div class="field">
+      <label for="techProficiency">Tech proficiency</label>
+      <select id="techProficiency" name="techProficiency" required>
         <option value="" selected disabled>Selecciona…</option>
         <option value="Savvy">Savvy</option>
         <option value="Comfortable">Comfortable</option>
@@ -222,22 +322,28 @@
     </div>
 
     <div class="field">
-      <label>Main motivations</label>
-      <input class="input" name="mainMotivations" required placeholder="Seguridad, rapidez, precisión..." />
+      <label for="mainMotivations">Main motivations</label>
+      <input class="input" id="mainMotivations" name="mainMotivations" required placeholder="Seguridad, rapidez, precisión..." />
     </div>
 
     <div class="field">
-      <label>Daily routine snapshot</label>
-      <textarea name="dailyRoutineSnapshot" required placeholder="¿Cómo es un día típico donde aparece este problema?"></textarea>
+      <label for="dailyRoutineSnapshot">Daily routine snapshot</label>
+      <textarea id="dailyRoutineSnapshot" name="dailyRoutineSnapshot" required placeholder="¿Cómo es un día típico donde aparece este problema?"></textarea>
     </div>
   </div>
 
   <!-- 10. JOURNEY STAGES -->
-  <div class="card">
-    <div class="card-title"><h2>10. Journey Stages</h2><span class="req">Required</span></div>
+  <div class="card" data-section="10">
+    <div class="card-title">
+      <h2>10. Journey Stages</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Required</span>
+      </div>
+    </div>
 
     <div class="field">
-      <label>Number of stages (default 3)</label>
+      <label for="numStages">Number of stages (default 3)</label>
       <input class="input" type="number" id="numStages" name="numStages" min="3" max="5" value="3" required />
       <p class="sub">Rango recomendado: 3–5.</p>
     </div>
@@ -245,13 +351,27 @@
     <div id="stagesContainer"></div>
 
     <div class="field">
-      <label>Opportunity areas</label>
-      <textarea name="opportunityAreas" required placeholder="¿Dónde podemos mejorar la experiencia?"></textarea>
+      <label for="opportunityAreas">Opportunity areas</label>
+      <textarea id="opportunityAreas" name="opportunityAreas" required placeholder="¿Dónde podemos mejorar la experiencia?"></textarea>
     </div>
 
     <div class="actions">
-      <button class="btn" type="submit" id="submitBtn">Generar</button>
-      <button class="btn secondary" id="copyBtn" type="button" disabled>Copiar</button>
+      <button class="btn" type="submit" id="submitBtn" aria-label="Generar output UX">
+        <span class="btn-content">Generar</span>
+      </button>
+      <button class="btn secondary" id="copyBtn" type="button" disabled aria-label="Copiar resultado">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M3 11V3a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="btn-content">Copiar</span>
+      </button>
+      <button class="btn secondary" id="downloadBtn" type="button" disabled aria-label="Descargar resultado">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2v8m0 0l3-3m-3 3L5 7m9 5H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="btn-content">Descargar</span>
+      </button>
     </div>
 
     <div class="status" id="status"></div>
@@ -275,6 +395,11 @@
         </div>
       </aside>
     </div>
+  </div>
+
+  <!-- Keyboard shortcuts help tooltip -->
+  <div class="shortcuts-hint" id="shortcutsHint">
+    <strong>Shortcuts:</strong> Cmd/Ctrl+Enter = Generar · Cmd/Ctrl+K = Copiar
   </div>
 
   <script src="./app.js"></script>

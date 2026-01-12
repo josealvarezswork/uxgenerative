@@ -9,6 +9,9 @@
   --inset: #0a0e15;
   --shadow: 0 18px 60px rgba(0,0,0,.55);
   --radius: 22px;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
 }
 
 * { box-sizing: border-box; }
@@ -32,10 +35,17 @@ body{
 
 .header{
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
   margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.header-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 h1{
@@ -50,6 +60,24 @@ h1{
   font-size: 13px;
 }
 
+/* Progress Badge */
+.progress-badge{
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(120,170,255,.12);
+  border: 1px solid rgba(120,170,255,.25);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(120,170,255,.95);
+  white-space: nowrap;
+}
+
+.progress-badge.complete{
+  background: rgba(16,185,129,.12);
+  border-color: rgba(16,185,129,.25);
+  color: rgba(16,185,129,.95);
+}
+
 .shell{
   display: grid;
   grid-template-columns: 1.15fr .85fr;
@@ -58,6 +86,8 @@ h1{
 
 @media (max-width: 920px){
   .shell{ grid-template-columns: 1fr; }
+  .header{ flex-direction: column; align-items: stretch; }
+  .header-actions{ justify-content: flex-start; }
 }
 
 .panel{
@@ -79,6 +109,11 @@ h1{
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 18px;
+  transition: border-color 0.2s ease;
+}
+
+.card.complete{
+  border-color: rgba(16,185,129,.35);
 }
 
 .card + .card{ margin-top: 14px; }
@@ -88,6 +123,13 @@ h1{
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  margin-bottom: 14px;
+}
+
+.card-meta{
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .card h2{
@@ -104,8 +146,47 @@ h1{
   border-radius: 999px;
 }
 
+/* Section Status Indicator */
+.section-status{
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.section-status[data-status="incomplete"]{
+  color: rgba(255,255,255,.25);
+}
+
+.section-status[data-status="complete"]{
+  color: var(--success);
+}
+
 .field{
   margin-top: 14px;
+}
+
+label{
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: rgba(233,238,246,.95);
+}
+
+/* Character Counter */
+.char-counter{
+  float: right;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.char-counter.warning{
+  color: var(--warning);
+}
+
+.char-counter.limit{
+  color: var(--error);
 }
 
 .input, textarea, select{
@@ -117,9 +198,15 @@ h1{
   padding: 14px 14px;
   font-size: 14px;
   outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
 
-textarea{ min-height: 110px; resize: vertical; }
+textarea{ 
+  min-height: 110px; 
+  resize: vertical; 
+  font-family: inherit;
+}
 
 .input::placeholder, textarea::placeholder{
   color: rgba(154,164,178,.55);
@@ -130,6 +217,61 @@ textarea{ min-height: 110px; resize: vertical; }
   box-shadow: 0 0 0 4px rgba(120,170,255,.10);
 }
 
+.input.valid, textarea.valid, select.valid{
+  border-color: rgba(16,185,129,.35);
+}
+
+.input.error, textarea.error, select.error{
+  border-color: rgba(239,68,68,.45);
+}
+
+/* Checkbox Grid (for platforms) */
+.checkbox-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.checkbox-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(10,14,21,.65);
+  border: 1px solid rgba(255,255,255,.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.checkbox-item:hover{
+  background: rgba(10,14,21,.85);
+  border-color: rgba(255,255,255,.15);
+}
+
+.checkbox-item input[type="checkbox"]{
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"]:checked + span{
+  color: rgba(120,170,255,.95);
+  font-weight: 500;
+}
+
+.checkbox-item:has(input:checked){
+  background: rgba(120,170,255,.12);
+  border-color: rgba(120,170,255,.35);
+}
+
+.checkbox-item span{
+  color: rgba(233,238,246,.85);
+  font-size: 14px;
+}
+
+/* Radio List */
 .radio-list{
   display: grid;
   gap: 10px;
@@ -144,25 +286,66 @@ textarea{ min-height: 110px; resize: vertical; }
   border-radius: 14px;
   background: rgba(10,14,21,.65);
   border: 1px solid rgba(255,255,255,.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
-.radio input{ transform: scale(1.05); }
-.radio span{ color: rgba(233,238,246,.92); }
+.radio:hover{
+  background: rgba(10,14,21,.85);
+  border-color: rgba(255,255,255,.15);
+}
+
+.radio:has(input:checked){
+  background: rgba(120,170,255,.12);
+  border-color: rgba(120,170,255,.35);
+}
+
+.radio input{ 
+  transform: scale(1.05); 
+  cursor: pointer;
+}
+
+.radio span{ 
+  color: rgba(233,238,246,.92); 
+}
+
+.radio input:checked + span{
+  color: rgba(120,170,255,.95);
+  font-weight: 500;
+}
 
 .actions{
   display: flex;
   gap: 12px;
   margin-top: 14px;
+  flex-wrap: wrap;
 }
 
 .btn{
   border: 0;
   border-radius: 14px;
-  padding: 12px 14px;
+  padding: 12px 18px;
   font-weight: 650;
+  font-size: 14px;
   cursor: pointer;
   color: #0b0f17;
   background: linear-gradient(90deg, rgba(120,170,255,.95), rgba(150,120,255,.95));
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover:not(:disabled){
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(120,170,255,.35);
+}
+
+.btn:active:not(:disabled){
+  transform: translateY(0);
 }
 
 .btn.secondary{
@@ -171,20 +354,74 @@ textarea{ min-height: 110px; resize: vertical; }
   border: 1px solid rgba(255,255,255,.12);
 }
 
-.btn:disabled{ opacity: .55; cursor: not-allowed; }
+.btn.secondary:hover:not(:disabled){
+  background: rgba(255,255,255,.10);
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+}
+
+.btn:disabled{ 
+  opacity: .45; 
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn svg{
+  width: 16px;
+  height: 16px;
+}
+
+/* Loading Spinner */
+.btn .loading-spinner{
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: rgba(255,255,255,.9);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn.loading .btn-content{
+  opacity: 0.5;
+}
 
 .output{
   white-space: pre-wrap;
   word-break: break-word;
   color: rgba(233,238,246,.92);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.55;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+}
+
+.output.loading{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--muted);
+}
+
+.output.loading::before{
+  content: '';
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(120,170,255,.2);
+  border-top-color: rgba(120,170,255,.8);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 12px;
 }
 
 .kpi{
   display: grid;
   gap: 10px;
   padding: 18px;
+  position: sticky;
+  top: 20px;
 }
 
 .kpi small{ color: var(--muted); }
@@ -204,4 +441,178 @@ textarea{ min-height: 110px; resize: vertical; }
   margin-top: 10px;
   min-height: 18px;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status.success{
+  color: var(--success);
+}
+
+.status.error{
+  color: var(--error);
+}
+
+.status.warning{
+  color: var(--warning);
+}
+
+/* Keyboard Shortcuts Hint */
+.shortcuts-hint{
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 16px;
+  background: rgba(12,18,28,.95);
+  border: 1px solid rgba(120,170,255,.25);
+  border-radius: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+  box-shadow: var(--shadow);
+}
+
+.shortcuts-hint.show{
+  opacity: 1;
+}
+
+.shortcuts-hint strong{
+  color: var(--text);
+}
+
+/* Auto-save indicator */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status.saving{
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Smooth scroll behavior */
+html{
+  scroll-behavior: smooth;
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible{
+  outline: 2px solid rgba(120,170,255,.6);
+  outline-offset: 2px;
+}
+
+/* Improved select styling */
+select{
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%239aa4b2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+/* Toast notification styles */
+.toast{
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 12px 18px;
+  background: rgba(12,18,28,.95);
+  border: 1px solid rgba(120,170,255,.25);
+  border-radius: 14px;
+  font-size: 14px;
+  color: var(--text);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  z-index: 1000;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.toast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.success{
+  border-color: rgba(16,185,129,.35);
+  background: rgba(16,185,129,.08);
+}
+
+.toast.error{
+  border-color: rgba(239,68,68,.35);
+  background: rgba(239,68,68,.08);
+}
+
+/* Loading overlay for form submission */
+.form-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(7,10,15,.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.form-overlay.active{
+  opacity: 1;
+  pointer-events: all;
+}
+
+.form-overlay-content{
+  text-align: center;
+  color: var(--text);
+}
+
+.form-overlay-spinner{
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(120,170,255,.2);
+  border-top-color: rgba(120,170,255,.9);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+/* Responsive improvements */
+@media (max-width: 600px){
+  .container{
+    margin: 20px auto;
+    padding: 0 12px 60px;
+  }
+  
+  h1{
+    font-size: 24px;
+  }
+  
+  .card h2{
+    font-size: 20px;
+  }
+  
+  .checkbox-grid{
+    grid-template-columns: 1fr;
+  }
+  
+  .actions{
+    flex-direction: column;
+  }
+  
+  .btn{
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .shortcuts-hint{
+    display: none;
+  }
 }
