@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UX Output Form</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>UX Output Form</h1>
+
+    <form id="uxForm">
+      <label>
+        Nombre del proyecto
+        <input name="projectName" required placeholder="Good Manual" />
+      </label>
+
+      <label>
+        Problema que resuelve
+        <textarea name="problem" required placeholder="Describe el problema..."></textarea>
+      </label>
+
+      <label>
+        Usuario objetivo
+        <textarea name="targetUser" required placeholder="¿Quién lo usa y por qué?"></textarea>
+      </label>
+
+      <label>
+        Funciones clave (3–6)
+        <textarea name="keyFeatures" required placeholder="- ..."></textarea>
+      </label>
+
+      <label>
+        Formato de salida
+        <select name="outputFormat">
+          <option value="cards">Cards (Project Overview → Research → ...)</option>
+          <option value="notion_toggles">Notion Toggles</option>
+          <option value="markdown">Markdown limpio</option>
+        </select>
+      </label>
+
+      <button type="submit" id="submitBtn">Generar</button>
+    </form>
+
+    <section class="result">
+      <div class="row">
+        <h2>Resultado</h2>
+        <button id="copyBtn" type="button" disabled>Copiar</button>
+      </div>
+      <pre id="output" class="output">Aún no hay resultado.</pre>
+    </section>
+
+    <p class="hint" id="status"></p>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
