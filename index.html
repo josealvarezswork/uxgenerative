@@ -7,52 +7,117 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <main class="container">
-    <h1>UX Output Form</h1>
-
-    <form id="uxForm">
-      <label>
-        Nombre del proyecto
-        <input name="projectName" required placeholder="Good Manual" />
-      </label>
-
-      <label>
-        Problema que resuelve
-        <textarea name="problem" required placeholder="Describe el problema..."></textarea>
-      </label>
-
-      <label>
-        Usuario objetivo
-        <textarea name="targetUser" required placeholder="¿Quién lo usa y por qué?"></textarea>
-      </label>
-
-      <label>
-        Funciones clave (3–6)
-        <textarea name="keyFeatures" required placeholder="- ..."></textarea>
-      </label>
-
-      <label>
-        Formato de salida
-        <select name="outputFormat">
-          <option value="cards">Cards (Project Overview → Research → ...)</option>
-          <option value="notion_toggles">Notion Toggles</option>
-          <option value="markdown">Markdown limpio</option>
-        </select>
-      </label>
-
-      <button type="submit" id="submitBtn">Generar</button>
-    </form>
-
-    <section class="result">
-      <div class="row">
-        <h2>Resultado</h2>
-        <button id="copyBtn" type="button" disabled>Copiar</button>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>UX Output Form</h1>
+        <p class="sub">Llena el brief. Genero un output estructurado (Project Overview → Research → Flows).</p>
       </div>
-      <pre id="output" class="output">Aún no hay resultado.</pre>
-    </section>
+    </div>
 
-    <p class="hint" id="status"></p>
-  </main>
+    <div class="shell">
+      <!-- LEFT: FORM -->
+      <section class="panel">
+        <div class="panel-inner">
+          <form id="uxForm">
+
+            <div class="card">
+              <div class="card-title">
+                <h2>Project Name</h2>
+                <span class="req">Required</span>
+              </div>
+              <div class="field">
+                <input class="input" name="projectName" required placeholder="Good Manual" />
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <h2>One-sentence Description</h2>
+                <span class="req">Required</span>
+              </div>
+              <div class="field">
+                <input class="input" name="oneSentence" required placeholder="Una frase que explique qué hace y para quién." />
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <h2>Type of Product</h2>
+                <span class="req">Required</span>
+              </div>
+
+              <div class="radio-list">
+                <label class="radio"><input type="radio" name="productType" value="App" required /><span>App</span></label>
+                <label class="radio"><input type="radio" name="productType" value="Platform" /><span>Platform</span></label>
+                <label class="radio"><input type="radio" name="productType" value="Service" /><span>Service</span></label>
+                <label class="radio"><input type="radio" name="productType" value="Tool" /><span>Tool</span></label>
+                <label class="radio"><input type="radio" name="productType" value="Hardware" /><span>Hardware</span></label>
+                <label class="radio"><input type="radio" name="productType" value="Hybrid" /><span>Hybrid</span></label>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <h2>Problem</h2>
+                <span class="req">Required</span>
+              </div>
+              <div class="field">
+                <textarea name="problem" required placeholder="Describe el problema real, contexto y por qué importa."></textarea>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <h2>Target User</h2>
+                <span class="req">Required</span>
+              </div>
+              <div class="field">
+                <textarea name="targetUser" required placeholder="¿Quién es el usuario, qué hace, en qué entorno?"></textarea>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <h2>Key Features</h2>
+                <span class="req">Required</span>
+              </div>
+              <div class="field">
+                <textarea name="keyFeatures" required placeholder="- Feature 1&#10;- Feature 2&#10;- Feature 3"></textarea>
+              </div>
+              <div class="field">
+                <select name="outputFormat">
+                  <option value="cards">Cards (estructura UX)</option>
+                  <option value="notion_toggles">Notion Toggles</option>
+                  <option value="markdown">Markdown limpio</option>
+                </select>
+              </div>
+
+              <div class="actions">
+                <button class="btn" type="submit" id="submitBtn">Generar</button>
+                <button class="btn secondary" id="copyBtn" type="button" disabled>Copiar</button>
+              </div>
+              <div class="status" id="status"></div>
+            </div>
+
+          </form>
+        </div>
+      </section>
+
+      <!-- RIGHT: RESULT -->
+      <aside class="panel">
+        <div class="kpi">
+          <div class="badge">
+            <strong>Resultado</strong>
+            <small id="meta">Listo para copiar / pegar</small>
+          </div>
+          <div class="card">
+            <pre id="output" class="output">Aún no hay resultado.</pre>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
 
   <script src="./app.js"></script>
 </body>
