@@ -356,22 +356,39 @@
     </div>
 
     <div class="actions">
-      <button class="btn" type="submit" id="submitBtn" aria-label="Generar output UX">
-        <span class="btn-content">Generar</span>
-      </button>
-      <button class="btn secondary" id="copyBtn" type="button" disabled aria-label="Copiar resultado">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M3 11V3a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        <span class="btn-content">Copiar</span>
-      </button>
-      <button class="btn secondary" id="downloadBtn" type="button" disabled aria-label="Descargar resultado">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2v8m0 0l3-3m-3 3L5 7m9 5H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="btn-content">Descargar</span>
-      </button>
+  <button class="btn" type="submit" id="submitBtn" aria-label="Generar output UX">
+    <span class="btn-content">Generar</span>
+  </button>
+  <button class="btn secondary" id="copyBtn" type="button" disabled aria-label="Copiar resultado">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M3 11V3a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span class="btn-content">Copiar</span>
+  </button>
+  <button class="btn secondary" id="downloadBtn" type="button" disabled aria-label="Descargar resultado">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2v8m0 0l3-3m-3 3L5 7m9 5H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="btn-content">Descargar</span>
+  </button>
+  <!-- ✅ NUEVO BOTÓN -->
+  <button class="btn secondary" id="copyJsonBtn" type="button" disabled aria-label="Copiar JSON para Figma">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2L2 6l6 4 6-4-6-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M2 10l6 4 6-4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+    <span class="btn-content">Copy JSON</span>
+  </button>
+</div>
+
+      <button class="btn secondary" id="copyJsonBtn" type="button" disabled aria-label="Copiar JSON para Figma">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M8 2L2 6l6 4 6-4-6-4z" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M2 10l6 4 6-4" stroke="currentColor" stroke-width="1.5"/>
+  </svg>
+  <span class="btn-content">Copy JSON</span>
+</button>
     </div>
 
     <div class="status" id="status"></div>

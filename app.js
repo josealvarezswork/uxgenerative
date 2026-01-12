@@ -26,6 +26,7 @@ const progressBadge = document.getElementById("progressBadge");
 const numStagesEl = document.getElementById("numStages");
 const stagesContainer = document.getElementById("stagesContainer");
 const shortcutsHint = document.getElementById("shortcutsHint");
+const copyJsonBtn = document.getElementById("copyJsonBtn");
 
 // ============================================================================
 // STATE
@@ -462,6 +463,9 @@ function loadExampleData() {
 // API SUBMISSION
 // ============================================================================
 
+// Variable global para guardar el JSON estructurado
+let lastStructuredData = null;
+
 async function submitForm(e) {
   e.preventDefault();
 
@@ -490,6 +494,79 @@ async function submitForm(e) {
       return;
     }
   }
+
+  // UI feedback
+  setStatus("Generando...", "");
+  submitBtn.disabled = true;
+  copyBtn.disabled = true;
+  downloadBtn.disabled = true;
+  
+  // ✅ NUEVO: Deshabilita el botón de Copy JSON también
+  const copyJsonBtn = document.getElementById("copyJsonBtn");
+  if (copyJsonBtn) copyJsonBtn.disabled = true;
+  
+  const btnContent = submitBtn.querySelector(".btn-content");
+  const originalText = btnContent.textContent;
+  btnContent.textContent = "Generando...";
+  
+  // Add loading spinner
+  const spinner = document.createElement("div");
+  spinner.className = "loading-spinner";
+  submitBtn.insertBefore(spinner, btnContent);
+  submitBtn.classList.add("loading");
+  
+  output.className = "output loading";
+  output.textContent = "Generando output estructurado...";
+
+  try {
+    const res = await fetch(CONFIG.API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`API Error ${res.status}: ${errorText.slice(0, 200)}`);
+    }
+
+    const json = await res.json();
+    const result = json.result || "(sin resultado)";
+    
+    // ✅ NUEVO: Guarda el JSON estructurado
+    lastStructuredData = json.structuredData || null;
+    
+    output.className = "output";
+    output.textContent = result;
+    lastGeneratedOutput = result;
+    
+    copyBtn.disabled = false;
+    downloadBtn.disabled = false;
+    
+    // ✅ NUEVO: Habilita el botón de Copy JSON si hay datos estructurados
+    if (copyJsonBtn && lastStructuredData) {
+      copyJsonBtn.disabled = false;
+    }
+    
+    setStatus("✓ Listo", "success");
+    showToast("Output generado exitosamente", "success");
+    
+    // Scroll to output
+    output.scrollIntoView({ behavior: "smooth", block: "start" });
+    
+  } catch (err) {
+    console.error("Submission error:", err);
+    output.className = "output";
+    output.textContent = "Error al generar el output. Por favor intenta nuevamente.";
+    setStatus(`Error: ${err.message}`, "error");
+    showToast("Error al generar", "error");
+  } finally {
+    submitBtn.disabled = false;
+    spinner.remove();
+    submitBtn.classList.remove("loading");
+    btnContent.textContent = originalText;
+  }
+}
 
   // UI feedback
   setStatus("Generando...", "");
@@ -564,6 +641,56 @@ async function copyToClipboard() {
     console.error("Copy error:", err);
     setStatus("Error al copiar", "error");
     showToast("No se pudo copiar (permisos del navegador)", "error");
+  }
+}
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(output.textContent);
+    setStatus("✓ Copiado", "success");
+    showToast("Copiado al portapapeles", "success");
+  } catch (err) {
+    console.error("Copy error:", err);
+    setStatus("Error al copiar", "error");
+    showToast("No se pudo copiar (permisos del navegador)", "error");
+  }
+}
+
+function downloadOutput() {
+  try {
+    const content = lastGeneratedOutput || output.textContent;
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ux-output-${Date.now()}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast("Archivo descargado", "success");
+  } catch (err) {
+    console.error("Download error:", err);
+    showToast("Error al descargar", "error");
+  }
+}
+
+// ✅ NUEVO: Función para copiar JSON para Figma
+async function copyJsonForFigma() {
+  if (!lastStructuredData) {
+    showToast("No hay datos estructurados para copiar", "error");
+    return;
+  }
+  
+  try {
+    const jsonString = JSON.stringify(lastStructuredData, null, 2);
+    await navigator.clipboard.writeText(jsonString);
+    setStatus("✓ JSON copiado para Figma", "success");
+    showToast("JSON copiado - Pégalo en el plugin de Figma", "success");
+  } catch (err) {
+    console.error("Copy JSON error:", err);
+    setStatus("Error al copiar JSON", "error");
+    showToast("No se pudo copiar JSON", "error");
   }
 }
 
@@ -655,6 +782,11 @@ function init() {
   form.addEventListener("submit", submitForm);
   copyBtn.addEventListener("click", copyToClipboard);
   downloadBtn.addEventListener("click", downloadOutput);
+  const copyJsonBtn = document.getElementById("copyJsonBtn");
+  if (copyJsonBtn) {
+    copyJsonBtn.addEventListener("click", copyJsonForFigma);
+  }
+  
   loadExampleBtn?.addEventListener("click", loadExampleData);
   clearDraftBtn?.addEventListener("click", () => {
     if (confirm("¿Seguro que quieres limpiar el borrador guardado?")) {
