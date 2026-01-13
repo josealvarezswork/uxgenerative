@@ -28,7 +28,7 @@ body{
 }
 
 .container{
-  max-width: 980px;
+  max-width: 720px;
   margin: 44px auto;
   padding: 0 18px 80px;
 }
@@ -80,7 +80,7 @@ h1{
 
 .shell{
   display: grid;
-  grid-template-columns: 1.15fr .85fr;
+  grid-template-columns: 1fr;
   gap: 18px;
 }
 
@@ -615,4 +615,251 @@ select{
   .shortcuts-hint{
     display: none;
   }
+}
+/* ============================================
+   TABS NAVIGATION
+   ============================================ */
+.tabs-nav{
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid rgba(120,170,255,.18);
+  border-radius: 18px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  flex-wrap: wrap;
+}
+
+.tab{
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.tab:hover{
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+}
+
+.tab.active{
+  background: rgba(120,170,255,.18);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tab.complete{
+  background: rgba(16,185,129,.25) !important;
+  border: 1px solid rgba(16,185,129,.40) !important;
+  color: rgba(16,185,129,1) !important;
+}
+
+
+/* Hide non-active sections */
+.card[data-section]{
+  display: none;
+}
+
+.card[data-section].active{
+  display: block;
+}
+
+/* Section navigation buttons */
+.section-nav{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.section-nav .btn{
+  flex: 1;
+  justify-content: center;
+}
+
+@media (max-width: 600px){
+  .tabs-nav{
+    gap: 4px;
+    padding: 8px;
+  }
+
+  .tab{
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+
+/* Notion Config within Generate section */
+.notion-config{
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.notion-config h3{
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+/* ============================================
+   NOTION CONFIG - IMPROVED
+   ============================================ */
+.notion-config{
+  margin-top: 24px;
+  padding: 20px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+}
+
+.notion-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.notion-header h3{
+  margin: 0;
+  font-size: 18px;
+}
+
+.notion-status{
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.06);
+  color: var(--muted);
+}
+
+.notion-status.connected{
+  background: rgba(16,185,129,.15);
+  color: var(--success);
+}
+
+.notion-steps{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(120,170,255,.05);
+  border-radius: 12px;
+}
+
+.notion-step{
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.step-num{
+  width: 24px;
+  height: 24px;
+  background: rgba(120,170,255,.2);
+  color: rgba(120,170,255,.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-content{
+  flex: 1;
+}
+
+.step-content strong{
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.step-content p{
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.step-content a{
+  color: rgba(120,170,255,.9);
+  text-decoration: none;
+}
+
+.step-content a:hover{
+  text-decoration: underline;
+}
+
+.notion-fields{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.notion-fields .field{
+  margin: 0;
+}
+
+/* ============================================
+   OUTPUT SECTION (inside Generate tab)
+   ============================================ */
+.output-section{
+  margin-top: 24px;
+  padding: 20px;
+  background: rgba(120,170,255,.03);
+  border: 1px solid rgba(120,170,255,.15);
+  border-radius: 16px;
+}
+
+.output-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.output-header strong{
+  font-size: 16px;
+}
+
+.output-header small{
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.output-content{
+  background: var(--inset);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.output-content .output{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.output-section.has-content{
+  border-color: rgba(16,185,129,.25);
+}
+
+.output-section.has-content .output-header strong::after{
+  content: " ✓";
+  color: var(--success);
 }

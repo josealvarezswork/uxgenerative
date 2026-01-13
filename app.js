@@ -1,528 +1,405 @@
 // ============================================================================
-// CONFIGURATION
+// CONFIGURATION & GLOBALS
 // ============================================================================
 
 const CONFIG = {
   API_URL: "https://broad-shadow-d8e2.josealvarezswork.workers.dev/api/generate",
-  AUTOSAVE_DELAY: 2000, // ms
+  AUTOSAVE_DELAY: 2000,
   STORAGE_KEY: "uxFormDraft",
-  EXAMPLE_DATA_KEY: "uxFormExample",
-  MAX_CHAR_WARNING: 0.8, // 80% of max
+  MAX_CHAR_WARNING: 0.8,
 };
+
+let lastGeneratedOutput = "";
+let lastStructuredData = null;
+let autosaveTimer = null;
+let currentSection = 1;
 
 // ============================================================================
 // DOM ELEMENTS
 // ============================================================================
 
-const form = document.getElementById("uxForm");
-const output = document.getElementById("output");
-const statusEl = document.getElementById("status");
+const uxForm = document.getElementById("uxForm");
 const submitBtn = document.getElementById("submitBtn");
 const copyBtn = document.getElementById("copyBtn");
 const downloadBtn = document.getElementById("downloadBtn");
+const copyJsonBtn = document.getElementById("copyJsonBtn");
+const sendNotionBtn = document.getElementById("sendNotionBtn");
+const notionTokenInput = document.getElementById("notionToken");
+const notionDatabaseIdInput = document.getElementById("notionDatabaseId");
+const notionPageIdInput = document.getElementById("notionPageId");
+const saveNotionCreds = document.getElementById("saveNotionCreds");
+const output = document.getElementById("output");
+const progressBadge = document.getElementById("progressBadge");
 const loadExampleBtn = document.getElementById("loadExampleBtn");
 const clearDraftBtn = document.getElementById("clearDraftBtn");
-const progressBadge = document.getElementById("progressBadge");
-const numStagesEl = document.getElementById("numStages");
-const stagesContainer = document.getElementById("stagesContainer");
 const shortcutsHint = document.getElementById("shortcutsHint");
-const copyJsonBtn = document.getElementById("copyJsonBtn");
+const numStagesInput = document.getElementById("numStages");
+const stagesContainer = document.getElementById("stagesContainer");
+const tabsNav = document.getElementById("tabsNav");
 
 // ============================================================================
-// STATE
+// EXAMPLE DATA
 // ============================================================================
 
-let autosaveTimeout = null;
-let lastGeneratedOutput = "";
+const EXAMPLE_DATA = {
+  projectName: "MediTrack",
+  oneSentence: "App móvil para que pacientes con enfermedades crónicas registren síntomas y compartan datos con médicos en tiempo real.",
+  productType: "App",
+  primaryPlatforms: ["Mobile", "Web"],
+  realWorldSituation: "Pacientes con diabetes, asma o hipertensión deben registrar manualmente síntomas en papel o apps fragmentadas. Médicos no tienen acceso a datos consistentes.",
+  whatGoesWrong: "Datos incompletos → diagnósticos menos precisos. Pacientes olvidan registros → seguimiento inefectivo. Cambio de médico = perder historial.",
+  currentWorkarounds: "WhatsApp, llamadas, Excel. Cada médico pide datos diferentes. Duplicación de esfuerzos.",
+  userRoleContext: "Pacientes adultos (35-65) con enfermedades crónicas, con smartphone básico. Algunos sin mucha literacy digital.",
+  tryingToAccomplish: "Tener un lugar centralizado donde registrar síntomas y compartir con médico sin perder datos.",
+  researchBacking: ["User interviews"],
+  researchBackingDetails: "n=12 entrevistas con pacientes diabéticos en CDMX. 83% usa WhatsApp para compartir datos con médicos. 91% pierde registros al cambiar de clínica.",
+  desiredOutcome: "Paciente registra síntoma → App notifica al médico automáticamente → Médico ve tendencias → Menos visitas innecesarias.",
+  whyUseThis: "Deja de ser paciente pasivo a active manager de su salud. Médico tiene datos reales, no recuerdos del paciente.",
+  productGoals: "• Reducir tiempo de consulta en 30% (menos explicaciones)\n• Aumentar adherencia al tratamiento en 45% (recordatorios + datos\n• Mejorar precision diagnóstica (datos vs intuición)",
+  mustHaveFeatures: "• Dashboard con síntomas últimos 30 días\n• Exportar PDF para llevar a médico\n• Recordatorios diarios automáticos\n• Historial completo (búsqueda por fecha/síntoma)",
+  niceToHave: "• Gráficos de tendencias\n• Compartir acceso a familiares",
+  outOfScope: "• Diagnóstico automático\n• Integración con historiales de hospitales",
+  technicalPlatformConstraints: "iOS 12+, Android 8+. Sin requiere acceso a red (almacenamiento local). Storage máximo 50MB.",
+  businessTimelineConstraints: "MVP en 4 meses. Equipo: 2 devs, 1 designer, 1 PM. Budget: $80k.",
+  adoptionRisks: "Regulación médica (telemedicina requiere aprobación). Competencia: existe Google Health pero no para crónicas. Desconfianza de pacientes en apps de salud.",
+  keyMetrics: "Tasa de uso semanal: Target 70%\nPromedio registros/semana: Target 4+",
+  facts: "n=12 entrevistas confirmó 'paciente necesita lugar centralizado' - Fuente: Research Desk 2025\nExisten 2M diabéticos en México - Fuente: IMSS",
+  assumptions: "Pacientes usarán app si hay recordatorios\nMédicos adoptarán app si les ahorra 10+ min/consulta",
+  needsValidation: "¿Médicos realmente abren la app durante consulta?",
+  ageOccupation: "35–65, Pacientes con enfermedades crónicas (diabetes, asma, hipertensión)",
+  techProficiency: "Basic",
+  mainMotivations: "Salud, organización, no perder información, confianza en médico",
+  dailyRoutineSnapshot: "7am: Despierta, toma medicinas. 12pm: Registra cómo se siente. 6pm: Revisa si tiene recordatorio de seguimiento. Si no se siente bien, abre app para datos históricos antes de llamar al médico.",
+  status: "Draft",
+  journeyStages: [
+    {
+      index: 1,
+      nameTimeline: "Pre-diagnosis",
+      whatHappens: "Paciente siente síntomas pero no sabe si es 'normal'. Busca en Google, asusta."
+    },
+    {
+      index: 2,
+      nameTimeline: "Initial Visit",
+      whatHappens: "Médico hace preguntas, paciente no recuerda bien cuándo empezó. Receta medicinas pero sin plan claro."
+    },
+    {
+      index: 3,
+      nameTimeline: "Ongoing Management",
+      whatHappens: "Paciente toma medicinas irregularmente. Olvida síntomas para siguiente cita. Médico no tiene baseline para ajustar."
+    }
+  ],
+  opportunityAreas: "Registrar síntomas ANTES de ir al médico (no durante)\nCompartir automáticamente histórico (no 'explique cómo se sintió')\nRecordatorios para no olvidar tomar medicinas",
+};
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// INITIALIZATION
 // ============================================================================
 
-function debounce(func, delay) {
-  let timeout;
-  return function (...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), delay);
-  };
+document.addEventListener("DOMContentLoaded", () => {
+  generateStageInputs();
+  // Load saved Notion creds (optional, localStorage)
+  try {
+    const savedToken = localStorage.getItem("notion_token");
+    const savedDb = localStorage.getItem("notion_database_id");
+    const savedPage = localStorage.getItem("notion_page_id");
+    if (savedToken) notionTokenInput.value = savedToken;
+    if (savedDb) notionDatabaseIdInput.value = savedDb;
+    if (savedPage) notionPageIdInput.value = savedPage;
+    if (savedToken || savedDb || savedPage) saveNotionCreds.checked = true;
+  } catch (e) {
+    // ignore storage errors
+  }
+
+  loadDraft();
+  setupEventListeners();
+  updateProgressBadge();
+  updateTabsCompletion();
+  setupCharCounters();
+});
+
+// ============================================================================
+// LOAD & SAVE DRAFT
+// ============================================================================
+
+function loadDraft() {
+  const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      populateForm(data);
+      showStatus("✓ Borrador cargado", "success");
+    } catch (err) {
+      console.error("Error loading draft:", err);
+    }
+  }
 }
 
-function setStatus(msg, type = "") {
-  if (!statusEl) return;
-  statusEl.textContent = msg || "";
-  statusEl.className = `status ${type}`;
-}
-
-function showToast(message, type = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
+function saveDraft() {
+  const formData = new FormData(uxForm);
+  const data = Object.fromEntries(formData);
   
-  setTimeout(() => toast.classList.add("show"), 10);
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  // Handle checkboxes manually
+  data.primaryPlatforms = Array.from(
+    uxForm.querySelectorAll('input[name="primaryPlatforms"]:checked')
+  ).map(el => el.value);
+  
+  data.researchBacking = Array.from(
+    uxForm.querySelectorAll('input[name="researchBacking"]:checked')
+  ).map(el => el.value);
+  
+  // Handle journey stages
+  data.journeyStages = Array.from(stagesContainer.querySelectorAll('.journey-stage')).map((stage, idx) => ({
+    index: idx + 1,
+    nameTimeline: stage.querySelector('[name*="stageName"]').value,
+    whatHappens: stage.querySelector('[name*="stageWhat"]').value,
+  }));
+  
+  localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+  showStatus("✓ Guardado automáticamente", "success");
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function populateForm(data) {
+  // If the data includes journeyStages, ensure inputs match the length first
+  if (Array.isArray(data.journeyStages)) {
+    const n = data.journeyStages.length;
+    if (!isNaN(n) && n > 0) {
+      numStagesInput.value = n;
+      generateStageInputs();
+    }
+  }
+
+  Object.entries(data).forEach(([key, value]) => {
+    // Handle checkbox groups (e.g., primaryPlatforms, researchBacking)
+    const checkboxes = uxForm.querySelectorAll(`input[name="${key}"][type="checkbox"]`);
+    if (checkboxes.length > 0) {
+      checkboxes.forEach(cb => {
+        cb.checked = Array.isArray(value) ? value.includes(cb.value) : cb.value === value;
+      });
+      return;
+    }
+
+    // Handle radio groups
+    const radios = uxForm.querySelectorAll(`input[name="${key}"][type="radio"]`);
+    if (radios.length > 0) {
+      radios.forEach(r => {
+        r.checked = String(r.value) === String(value);
+      });
+      return;
+    }
+
+    // Handle select elements (including multiple selects)
+    const select = uxForm.querySelector(`select[name="${key}"]`);
+    if (select) {
+      if (select.multiple && Array.isArray(value)) {
+        Array.from(select.options).forEach(opt => {
+          opt.selected = value.includes(opt.value);
+        });
+      } else {
+        select.value = value || "";
+      }
+      return;
+    }
+
+    // Fallback for single inputs/textareas
+    const field = uxForm.elements[key];
+    if (field) {
+      try {
+        field.value = value || "";
+      } catch (e) {
+        // Ignore elements without value
+      }
+    }
+  });
+
+  // Explicitly populate journey stage inputs if present
+  if (Array.isArray(data.journeyStages)) {
+    data.journeyStages.forEach((s, idx) => {
+      const nameEl = document.getElementById(`stageName${idx + 1}`);
+      const whatEl = document.getElementById(`stageWhat${idx + 1}`);
+      if (nameEl) nameEl.value = s.nameTimeline || "";
+      if (whatEl) whatEl.value = s.whatHappens || "";
+    });
+  }
+
+  updateProgressBadge();
+  updateTabsCompletion();
+} 
+
+// ============================================================================
+// AUTO-SAVE
+// ============================================================================
+
+uxForm.addEventListener("input", () => {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(saveDraft, CONFIG.AUTOSAVE_DELAY);
+  updateProgressBadge();
+  updateTabsCompletion();
+  updateSectionStatus();
+});
+
+uxForm.addEventListener("change", () => {
+  saveDraft();
+  updateProgressBadge();
+  updateTabsCompletion();
+  updateSectionStatus();
+});
+
+// ============================================================================
+// JOURNEY STAGES DYNAMIC
+// ============================================================================
+
+function generateStageInputs() {
+  const numStages = parseInt(numStagesInput.value) || 3;
+  stagesContainer.innerHTML = "";
+  
+  for (let i = 1; i <= numStages; i++) {
+    const stageEl = document.createElement("div");
+    stageEl.className = "journey-stage";
+    stageEl.innerHTML = `
+      <div class="field" style="margin-top: 18px; padding: 14px; background: rgba(120,170,255,.06); border-radius: 14px;">
+        <label for="stageName${i}"><strong>Stage ${i}: Name/Timeline</strong></label>
+        <input class="input" id="stageName${i}" name="stageName${i}" placeholder="e.g., Awareness, Consideration..." />
+        
+        <label for="stageWhat${i}" style="margin-top: 10px; display: block;"><strong>What happens?</strong></label>
+        <textarea id="stageWhat${i}" name="stageWhat${i}" placeholder="Describe the experience..."></textarea>
+      </div>
+    `;
+    stagesContainer.appendChild(stageEl);
+  }
 }
+
+numStagesInput.addEventListener("change", () => {
+  generateStageInputs();
+  saveDraft();
+});
 
 // ============================================================================
 // CHARACTER COUNTER
 // ============================================================================
 
 function setupCharCounters() {
-  const counters = document.querySelectorAll(".char-counter");
-  
-  counters.forEach(counter => {
-    const max = parseInt(counter.dataset.max);
-    const input = counter.closest(".field").querySelector("input, textarea");
+  uxForm.querySelectorAll("input[maxlength], textarea[data-max]").forEach(field => {
+    const counter = field.nextElementSibling?.classList.contains("char-counter")
+      ? field.nextElementSibling
+      : field.parentElement?.querySelector(".char-counter");
     
-    if (!input) return;
+    if (!counter) return;
     
     function updateCounter() {
-      const length = input.value.length;
-      counter.textContent = `${length}/${max}`;
+      const max = parseInt(counter.dataset.max) || parseInt(field.maxLength);
+      const current = field.value.length;
+      const percent = current / max;
       
+      counter.textContent = `${current}/${max}`;
       counter.classList.remove("warning", "limit");
-      if (length >= max) {
-        counter.classList.add("limit");
-      } else if (length >= max * CONFIG.MAX_CHAR_WARNING) {
-        counter.classList.add("warning");
-      }
+      
+      if (percent >= 1) counter.classList.add("limit");
+      else if (percent >= CONFIG.MAX_CHAR_WARNING) counter.classList.add("warning");
     }
     
-    input.addEventListener("input", updateCounter);
+    field.addEventListener("input", updateCounter);
     updateCounter();
   });
 }
 
 // ============================================================================
-// SECTION VALIDATION & PROGRESS
+// PROGRESS TRACKING
 // ============================================================================
 
-function isFieldValid(field) {
-  if (!field.hasAttribute("required")) return true;
+function updateProgressBadge() {
+  const sections = document.querySelectorAll(".card[data-section]");
+  let complete = 0;
   
-  if (field.type === "checkbox") {
-    const name = field.name;
-    const checkboxes = document.querySelectorAll(`input[name="${name}"]`);
-    return Array.from(checkboxes).some(cb => cb.checked);
-  }
-  
-  return field.value.trim() !== "";
-}
-
-function isSectionComplete(sectionNum) {
-  const card = document.querySelector(`.card[data-section="${sectionNum}"]`);
-  if (!card) return false;
-  
-  const requiredFields = card.querySelectorAll("[required]");
-  
-  // Special handling for checkboxes
-  const checkboxGroups = new Set();
-  requiredFields.forEach(field => {
-    if (field.type === "checkbox") {
-      checkboxGroups.add(field.name);
+  sections.forEach(section => {
+    const sectionNum = section.dataset.section;
+    if (isSectionComplete(sectionNum)) {
+      complete++;
+      section.classList.add("complete");
+      section.querySelector(".section-status").dataset.status = "complete";
+      section.querySelector(".section-status").textContent = "✓";
+    } else {
+      section.classList.remove("complete");
+      section.querySelector(".section-status").dataset.status = "incomplete";
+      section.querySelector(".section-status").textContent = "○";
     }
   });
   
-  // Check regular fields
-  for (const field of requiredFields) {
-    if (field.type === "checkbox") continue; // handled separately
-    if (!isFieldValid(field)) return false;
-  }
+  const totalSections = sections.length;
+  const badgeEl = progressBadge.querySelector(".progress-text");
+  badgeEl.textContent = `${complete}/${totalSections} secciones`;
   
-  // Check checkbox groups
-  for (const groupName of checkboxGroups) {
-    const checkboxes = card.querySelectorAll(`input[name="${groupName}"]`);
-    const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-    if (!anyChecked) return false;
-  }
-  
-  return true;
-}
-
-function updateSectionStatus(sectionNum) {
-  const card = document.querySelector(`.card[data-section="${sectionNum}"]`);
-  if (!card) return;
-  
-  const isComplete = isSectionComplete(sectionNum);
-  const statusIcon = card.querySelector(".section-status");
-  
-  if (statusIcon) {
-    statusIcon.dataset.status = isComplete ? "complete" : "incomplete";
-    statusIcon.textContent = isComplete ? "✓" : "○";
-  }
-  
-  if (isComplete) {
-    card.classList.add("complete");
-  } else {
-    card.classList.remove("complete");
-  }
-}
-
-function updateProgressBadge() {
-  const totalSections = 10;
-  let completedSections = 0;
-  
-  for (let i = 1; i <= totalSections; i++) {
-    if (isSectionComplete(i)) completedSections++;
-  }
-  
-  const progressText = progressBadge.querySelector(".progress-text");
-  if (progressText) {
-    progressText.textContent = `${completedSections}/${totalSections} secciones`;
-  }
-  
-  if (completedSections === totalSections) {
+  if (complete === totalSections) {
     progressBadge.classList.add("complete");
   } else {
     progressBadge.classList.remove("complete");
   }
 }
 
-function setupRealtimeValidation() {
-  // Monitor all form changes
-  form.addEventListener("input", debounce(() => {
-    // Update all section statuses
-    for (let i = 1; i <= 10; i++) {
-      updateSectionStatus(i);
-    }
-    updateProgressBadge();
-    scheduleAutosave();
-  }, 300));
+function isSectionComplete(sectionNum) {
+  const section = document.querySelector(`.card[data-section="${sectionNum}"]`);
+  const inputs = section.querySelectorAll("input[required], textarea[required], select[required]");
   
-  form.addEventListener("change", () => {
-    for (let i = 1; i <= 10; i++) {
-      updateSectionStatus(i);
+  return Array.from(inputs).every(input => {
+    if (input.type === "checkbox") {
+      const group = section.querySelectorAll(`input[name="${input.name}"]`);
+      return Array.from(group).some(cb => cb.checked);
     }
-    updateProgressBadge();
-    scheduleAutosave();
+    return input.value.trim() !== "";
   });
-  
-  // Initial check
-  setTimeout(() => {
-    for (let i = 1; i <= 10; i++) {
-      updateSectionStatus(i);
-    }
-    updateProgressBadge();
-  }, 100);
+}
+
+function updateSectionStatus() {
+  updateProgressBadge();
+  updateTabsCompletion();
 }
 
 // ============================================================================
-// JOURNEY STAGES RENDERING
+// FORM SUBMISSION
 // ============================================================================
 
-function renderStages(n) {
-  const count = Math.max(3, Math.min(5, Number(n || 3)));
-  stagesContainer.innerHTML = "";
-
-  for (let i = 1; i <= count; i++) {
-    const block = document.createElement("div");
-    block.className = "card";
-    block.style.marginTop = "14px";
-
-    block.innerHTML = `
-      <div class="card-title">
-        <h2>Stage ${i}</h2>
-        <span class="req">Required</span>
-      </div>
-
-      <div class="field">
-        <label for="stage_${i}_nameTimeline">Stage ${i}: Name & Timeline</label>
-        <input class="input" id="stage_${i}_nameTimeline" name="stage_${i}_nameTimeline" required placeholder="Ej: 'Diagnóstico (10–15 min)'" />
-      </div>
-
-      <div class="field">
-        <label for="stage_${i}_whatHappens">What happens (actions + thoughts + emotions + pains)</label>
-        <textarea id="stage_${i}_whatHappens" name="stage_${i}_whatHappens" required placeholder="Describe acciones, pensamientos, emociones y pain points."></textarea>
-      </div>
-    `;
-    stagesContainer.appendChild(block);
-  }
-  
-  // Re-attach event listeners for new fields
-  setupRealtimeValidation();
-}
-
-// ============================================================================
-// FORM DATA COLLECTION
-// ============================================================================
-
-function collectFormData() {
-  const fd = new FormData(form);
-  const data = {};
-
-  // Copy single-value fields
-  for (const [k, v] of fd.entries()) {
-    if (!(k in data)) {
-      data[k] = typeof v === "string" ? v.trim() : v;
-    }
-  }
-
-  // Multi-checkbox: primaryPlatforms
-  const platformCheckboxes = document.querySelectorAll('input[name="primaryPlatforms"]:checked');
-  data.primaryPlatforms = Array.from(platformCheckboxes).map(cb => cb.value);
-
-  // Multi-checkbox: researchBacking
-  data.researchBacking = fd.getAll("researchBacking").map(x => String(x).trim());
-
-  // Journey stages
-  const numStages = Math.max(3, Math.min(5, Number(fd.get("numStages") || 3)));
-  data.journeyStages = [];
-  for (let i = 1; i <= numStages; i++) {
-    const nameTimeline = String(fd.get(`stage_${i}_nameTimeline`) || "").trim();
-    const whatHappens = String(fd.get(`stage_${i}_whatHappens`) || "").trim();
-    data.journeyStages.push({ index: i, nameTimeline, whatHappens });
-  }
-
-  return data;
-}
-
-// ============================================================================
-// AUTO-SAVE FUNCTIONALITY
-// ============================================================================
-
-function scheduleAutosave() {
-  clearTimeout(autosaveTimeout);
-  autosaveTimeout = setTimeout(() => {
-    saveFormDraft();
-  }, CONFIG.AUTOSAVE_DELAY);
-}
-
-function saveFormDraft() {
-  try {
-    const data = collectFormData();
-    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
-    setStatus("Guardado automáticamente", "saving");
-    setTimeout(() => {
-      if (statusEl.textContent === "Guardado automáticamente") {
-        setStatus("");
-      }
-    }, 2000);
-  } catch (err) {
-    console.error("Error saving draft:", err);
-  }
-}
-
-function loadFormDraft() {
-  try {
-    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-    if (!saved) return false;
-    
-    const data = JSON.parse(saved);
-    populateForm(data);
-    
-    showToast("Borrador cargado", "success");
-    return true;
-  } catch (err) {
-    console.error("Error loading draft:", err);
-    return false;
-  }
-}
-
-function clearFormDraft() {
-  try {
-    localStorage.removeItem(CONFIG.STORAGE_KEY);
-    form.reset();
-    renderStages(3);
-    updateProgressBadge();
-    showToast("Borrador eliminado", "success");
-    
-    // Reset all section statuses
-    for (let i = 1; i <= 10; i++) {
-      updateSectionStatus(i);
-    }
-  } catch (err) {
-    console.error("Error clearing draft:", err);
-  }
-}
-
-function populateForm(data) {
-  // Simple fields
-  for (const [key, value] of Object.entries(data)) {
-    if (key === "primaryPlatforms" || key === "researchBacking" || key === "journeyStages") continue;
-    
-    const field = form.elements[key];
-    if (field && typeof value === "string") {
-      field.value = value;
-    }
-  }
-  
-  // Primary platforms (checkboxes)
-  if (Array.isArray(data.primaryPlatforms)) {
-    data.primaryPlatforms.forEach(value => {
-      const checkbox = form.querySelector(`input[name="primaryPlatforms"][value="${value}"]`);
-      if (checkbox) checkbox.checked = true;
-    });
-  }
-  
-  // Research backing (checkboxes)
-  if (Array.isArray(data.researchBacking)) {
-    data.researchBacking.forEach(value => {
-      const checkbox = form.querySelector(`input[name="researchBacking"][value="${value}"]`);
-      if (checkbox) checkbox.checked = true;
-    });
-  }
-  
-  // Journey stages
-  if (Array.isArray(data.journeyStages) && data.journeyStages.length > 0) {
-    const numStages = data.journeyStages.length;
-    numStagesEl.value = numStages;
-    renderStages(numStages);
-    
-    setTimeout(() => {
-      data.journeyStages.forEach((stage, idx) => {
-        const i = idx + 1;
-        const nameField = form.elements[`stage_${i}_nameTimeline`];
-        const whatField = form.elements[`stage_${i}_whatHappens`];
-        if (nameField) nameField.value = stage.nameTimeline || "";
-        if (whatField) whatField.value = stage.whatHappens || "";
-      });
-      
-      // Update validation after loading
-      for (let i = 1; i <= 10; i++) {
-        updateSectionStatus(i);
-      }
-      updateProgressBadge();
-    }, 100);
-  }
-}
-
-// ============================================================================
-// EXAMPLE DATA
-// ============================================================================
-
-function loadExampleData() {
-  const exampleData = {
-    projectName: "MediTrack",
-    oneSentence: "App móvil para médicos que facilita el seguimiento de pacientes hospitalizados en tiempo real.",
-    productType: "App",
-    primaryPlatforms: ["Mobile"],
-    realWorldSituation: "Los médicos hacen rondas hospitalarias visitando 15-20 pacientes diarios. Cada visita requiere revisar historias clínicas en papel o sistemas fragmentados.",
-    whatGoesWrong: "Pierden 20-30 minutos por ronda buscando información. Los errores de transcripción ocurren en ~15% de casos. La comunicación entre turnos es incompleta.",
-    currentWorkarounds: "Usan WhatsApp no oficial, notas en papel, y múltiples sistemas legacy que no se comunican entre sí.",
-    userRoleContext: "Médicos residentes e internistas en hospitales urbanos de 200+ camas",
-    tryingToAccomplish: "Acceder rápidamente al estado del paciente, resultados de laboratorio, y medicación actual durante rondas para tomar decisiones informadas.",
-    researchBacking: ["User interviews"],
-    researchBackingDetails: 'n=12 entrevistas. Quote: "Paso más tiempo buscando info que con el paciente" (8/12 médicos). Promedio 25min/ronda perdidos.',
-    desiredOutcome: "Completar rondas en 60% menos tiempo. Cero errores de transcripción. Comunicación entre turnos < 5min.",
-    whyUseThis: "Todo en un lugar. Diseñado para uso móvil durante caminata. Voz-a-texto integrado.",
-    productGoals: "• Reducir tiempo de ronda de 90min a 35min\n• Eliminar errores de transcripción\n• Mejorar satisfacción del médico (NPS > 40)",
-    mustHaveFeatures: "• Vista rápida de pacientes por sala\n• Escaneo QR de pulsera paciente\n• Dictado por voz\n• Alertas críticas push\n• Modo offline",
-    niceToHave: "• Integración con calendario\n• Predicción de deterioro con ML",
-    outOfScope: "• Facturación\n• Gestión de citas\n• Telemedicina",
-    technicalPlatformConstraints: "iOS 15+, Android 11+. Integración FHIR con Epic/Cerner. Offline-first con sincronización. Cumplimiento HIPAA.",
-    businessTimelineConstraints: "Presupuesto $200k. Equipo de 4 (1 PM, 2 devs, 1 designer). Beta en 4 meses. Hospital piloto ya confirmado.",
-    adoptionRisks: "Resistencia de médicos >50 años. Políticas IT hospitalarias estrictas. Competencia con Epic Haiku.",
-    keyMetrics: "Task completion rondas: 90min → 35min en Q1\nError rate: 15% → 0% en Q2\nDaily active users: 70% del staff médico\nNPS > 40",
-    facts: "Entrevistas n=12 confirman problema. Hospital piloto firmado (Source: contrato 2024-01-15). Epic tiene API FHIR documentada.",
-    assumptions: "Médicos adoptarán nueva herramienta rápido. IT hospital aprobará en < 2 semanas. Offline es deal-breaker.",
-    needsValidation: "¿Dictado por voz funciona en ambiente ruidoso? ¿IT aprueba app externa? ¿Usuarios >50 años adoptan?",
-    ageOccupation: "28–45, Médicos residentes e internistas",
-    techProficiency: "Comfortable",
-    mainMotivations: "Eficiencia, precisión clínica, evitar burnout",
-    dailyRoutineSnapshot: "Llegan 7am, revisan lista de pacientes, hacen rondas 8-10am visitando cada sala, documentan mientras caminan, pasan turno 2pm.",
-    numStages: 3,
-    opportunityAreas: "Durante las rondas (acceso info). Pase de turno (comunicación). Después de rondas (documentación)."
-  };
-  
-  // Add stages
-  exampleData.journeyStages = [
-    {
-      index: 1,
-      nameTimeline: "Pre-ronda (7:00-8:00am)",
-      whatHappens: "Revisan lista de pacientes en papel. Buscan historias en 3 sistemas diferentes. Se frustran por info desactualizada. Pain: 30min perdidos antes de empezar."
-    },
-    {
-      index: 2,
-      nameTimeline: "Durante ronda (8:00-10:00am)",
-      whatHappens: "Visitan pacientes sala por sala. Anotan en papel. Buscan labs en PC de pasillo. Se preocupan por olvidar algo crítico. Pain: Fragmentación cognitiva."
-    },
-    {
-      index: 3,
-      nameTimeline: "Pase de turno (2:00-3:00pm)",
-      whatHappens: "Transcriben notas a sistema. Informan casos críticos verbalmente. Olvidan detalles menores. Pain: 30min extra + errores de memoria."
-    }
-  ];
-  
-  populateForm(exampleData);
-  showToast("Ejemplo cargado", "success");
-}
-
-// ============================================================================
-// API SUBMISSION
-// ============================================================================
-
-// Variable global para guardar el JSON estructurado
-let lastStructuredData = null;
-
-async function submitForm(e) {
+submitBtn.addEventListener("click", async (e) => {
   e.preventDefault();
-
-  // Client-side validation
-  const data = collectFormData();
   
-  // Check required multi-select fields
-  if (!Array.isArray(data.primaryPlatforms) || data.primaryPlatforms.length === 0) {
-    showToast("Selecciona al menos 1 Primary Platform", "error");
-    document.querySelector('input[name="primaryPlatforms"]')?.focus();
-    return;
-  }
-
-  if (!Array.isArray(data.researchBacking) || data.researchBacking.length === 0) {
-    showToast("Selecciona al menos 1 Research backing", "error");
-    document.querySelector('input[name="researchBacking"]')?.focus();
+  // Validate form
+  if (!uxForm.checkValidity()) {
+    showToast("Por favor completa todos los campos requeridos", "error");
     return;
   }
   
-  // Check all required fields
-  const requiredFields = form.querySelectorAll("[required]");
-  for (const field of requiredFields) {
-    if (!isFieldValid(field)) {
-      showToast("Completa todos los campos requeridos", "error");
-      field.focus();
-      return;
-    }
-  }
+  await submitForm();
+});
 
-  // UI feedback
-  setStatus("Generando...", "");
-  submitBtn.disabled = true;
-  copyBtn.disabled = true;
-  downloadBtn.disabled = true;
-  
-  // ✅ NUEVO: Deshabilita el botón de Copy JSON también
-  const copyJsonBtn = document.getElementById("copyJsonBtn");
-  if (copyJsonBtn) copyJsonBtn.disabled = true;
-  
-  const btnContent = submitBtn.querySelector(".btn-content");
-  const originalText = btnContent.textContent;
-  btnContent.textContent = "Generando...";
-  
-  // Add loading spinner
-  const spinner = document.createElement("div");
-  spinner.className = "loading-spinner";
-  submitBtn.insertBefore(spinner, btnContent);
-  submitBtn.classList.add("loading");
-  
-  output.className = "output loading";
-  output.textContent = "Generando output estructurado...";
-
+async function submitForm() {
   try {
+    submitBtn.classList.add("loading");
+    submitBtn.disabled = true;
+    output.classList.add("loading");
+    
+    const formData = new FormData(uxForm);
+    const data = Object.fromEntries(formData);
+    
+    // Handle arrays
+    data.primaryPlatforms = Array.from(
+      uxForm.querySelectorAll('input[name="primaryPlatforms"]:checked')
+    ).map(el => el.value);
+    
+    data.researchBacking = Array.from(
+      uxForm.querySelectorAll('input[name="researchBacking"]:checked')
+    ).map(el => el.value);
+    
+    data.journeyStages = Array.from(stagesContainer.querySelectorAll(".journey-stage")).map((stage, idx) => ({
+      index: idx + 1,
+      nameTimeline: stage.querySelector('[id*="stageName"]').value,
+      whatHappens: stage.querySelector('[id*="stageWhat"]').value,
+    }));
+    
+    // Form data saved for fallback
+    const formDataBackup = data;
+
     const res = await fetch(CONFIG.API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
@@ -530,101 +407,43 @@ async function submitForm(e) {
       throw new Error(`API Error ${res.status}: ${errorText.slice(0, 200)}`);
     }
 
-    const json = await res.json();
-    const result = json.result || "(sin resultado)";
-    
-    // ✅ NUEVO: Guarda el JSON estructurado
-    lastStructuredData = json.structuredData || null;
-    
-    output.className = "output";
-    output.textContent = result;
-    lastGeneratedOutput = result;
-    
-    copyBtn.disabled = false;
-    downloadBtn.disabled = false;
-    
-    // ✅ NUEVO: Habilita el botón de Copy JSON si hay datos estructurados
-    if (copyJsonBtn && lastStructuredData) {
-      copyJsonBtn.disabled = false;
-    }
-    
-    setStatus("✓ Listo", "success");
-    showToast("Output generado exitosamente", "success");
-    
-    // Scroll to output
-    output.scrollIntoView({ behavior: "smooth", block: "start" });
-    
-  } catch (err) {
-    console.error("Submission error:", err);
-    output.className = "output";
-    output.textContent = "Error al generar el output. Por favor intenta nuevamente.";
-    setStatus(`Error: ${err.message}`, "error");
-    showToast("Error al generar", "error");
-  } finally {
-    submitBtn.disabled = false;
-    spinner.remove();
-    submitBtn.classList.remove("loading");
-    btnContent.textContent = originalText;
-  }
-}
+    const result = await res.json();
+    lastGeneratedOutput = result.result;
 
-  // UI feedback
-  setStatus("Generando...", "");
-  submitBtn.disabled = true;
-  copyBtn.disabled = true;
-  downloadBtn.disabled = true;
-  
-  const btnContent = submitBtn.querySelector(".btn-content");
-  const originalText = btnContent.textContent;
-  btnContent.textContent = "Generando...";
-  
-  // Add loading spinner
-  const spinner = document.createElement("div");
-  spinner.className = "loading-spinner";
-  submitBtn.insertBefore(spinner, btnContent);
-  submitBtn.classList.add("loading");
-  
-  output.className = "output loading";
-  output.textContent = "Generando output estructurado...";
-
-  try {
-    const res = await fetch(CONFIG.API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`API Error ${res.status}: ${errorText.slice(0, 200)}`);
+    // Parse the AI-generated JSON and store it for Notion
+    try {
+      let cleanJson = lastGeneratedOutput.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+      lastStructuredData = JSON.parse(cleanJson);
+      if (!lastStructuredData.projectName) {
+        lastStructuredData.projectName = formDataBackup.projectName || 'UX Strategy Brief';
+      }
+      console.log('Parsed AI JSON:', lastStructuredData);
+    } catch (parseErr) {
+      console.warn('Could not parse AI JSON, using form data:', parseErr);
+      lastStructuredData = formDataBackup;
     }
 
-    const json = await res.json();
-    const result = json.result || "(sin resultado)";
-    
-    output.className = "output";
-    output.textContent = result;
-    lastGeneratedOutput = result;
-    
+    // Display formatted output
+    try {
+      output.textContent = JSON.stringify(lastStructuredData, null, 2);
+    } catch { output.textContent = lastGeneratedOutput; }
+    output.classList.remove('loading');
+
     copyBtn.disabled = false;
     downloadBtn.disabled = false;
-    setStatus("✓ Listo", "success");
-    showToast("Output generado exitosamente", "success");
-    
-    // Scroll to output
-    output.scrollIntoView({ behavior: "smooth", block: "start" });
+    copyJsonBtn.disabled = false;
+    sendNotionBtn.disabled = !lastStructuredData;
+    showStatus('✓ Output generado', 'success');
+    showToast('¡JSON estructurado listo!', 'success');
     
   } catch (err) {
-    console.error("Submission error:", err);
-    output.className = "output";
-    output.textContent = "Error al generar el output. Por favor intenta nuevamente.";
-    setStatus(`Error: ${err.message}`, "error");
-    showToast("Error al generar", "error");
+    console.error("Submit error:", err);
+    output.classList.remove("loading");
+    showStatus(`Error: ${err.message}`, "error");
+    showToast(`Error: ${err.message}`, "error");
   } finally {
-    submitBtn.disabled = false;
-    spinner.remove();
     submitBtn.classList.remove("loading");
-    btnContent.textContent = originalText;
+    submitBtn.disabled = false;
   }
 }
 
@@ -632,17 +451,79 @@ async function submitForm(e) {
 // COPY & DOWNLOAD
 // ============================================================================
 
-async function copyToClipboard() {
-  try {
-    await navigator.clipboard.writeText(output.textContent);
-    setStatus("✓ Copiado", "success");
-    showToast("Copiado al portapapeles", "success");
-  } catch (err) {
-    console.error("Copy error:", err);
-    setStatus("Error al copiar", "error");
-    showToast("No se pudo copiar (permisos del navegador)", "error");
+copyBtn.addEventListener("click", copyToClipboard);
+downloadBtn.addEventListener("click", downloadOutput);
+copyJsonBtn.addEventListener("click", copyJsonForFigma);
+sendNotionBtn.addEventListener("click", async () => {
+  if (!lastStructuredData) {
+    showToast("No hay datos para enviar", "error");
+    return;
   }
-}
+
+  // Collect optional creds from UI
+  const notionToken = notionTokenInput.value?.trim();
+  const notionDatabaseId = notionDatabaseIdInput.value?.trim();
+
+  // Save in localStorage if user asked
+  try {
+    if (saveNotionCreds.checked) {
+      if (notionToken) localStorage.setItem("notion_token", notionToken);
+      if (notionDatabaseId) localStorage.setItem("notion_database_id", notionDatabaseId);
+      if (notionPageIdInput.value) localStorage.setItem("notion_page_id", notionPageIdInput.value);
+    } else {
+      localStorage.removeItem("notion_token");
+      localStorage.removeItem("notion_database_id");
+      localStorage.removeItem("notion_page_id");
+    }
+    sendNotionBtn.disabled = true;
+    sendNotionBtn.classList.add("loading");
+
+    try {
+      const payload = { structuredData: lastStructuredData };
+      if (notionToken) payload.notionToken = notionToken;
+      if (notionDatabaseId) payload.notionDatabaseId = notionDatabaseId;
+      if (notionPageIdInput.value) payload.notionPageId = notionPageIdInput.value;
+
+      const res = await fetch("https://broad-shadow-d8e2.josealvarezswork.workers.dev/api/notion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      // Try to parse JSON body (fallback to text for error details)
+      const resBody = await res.json().catch(async () => {
+        const t = await res.text().catch(() => "");
+        return { ok: false, raw: t };
+      });
+
+      if (!res.ok) {
+        const details = resBody?.details || resBody?.raw || JSON.stringify(resBody);
+        throw new Error(`Notion send failed: ${res.status} ${String(details).slice(0,200)}`);
+      }
+
+      // Show success and open page if Notion returns a URL
+      const pageUrl = resBody?.page?.url || (resBody?.page && resBody.page.id ? `https://www.notion.so/${resBody.page.id.replace(/-/g, '')}` : null);
+      if (pageUrl) {
+        showToast("Enviado a Notion correctamente — abriendo Notion...", "success");
+        window.open(pageUrl, "_blank");
+      } else {
+        showToast("Enviado a Notion correctamente", "success");
+      }
+    } catch (err) {
+      console.error("Notion send error:", err);
+      showToast(`Error al enviar a Notion: ${err.message}`, "error");
+    } finally {
+      sendNotionBtn.disabled = false;
+      sendNotionBtn.classList.remove("loading");
+    }
+  } catch (err) {
+    console.error("Error al guardar credenciales de Notion:", err);
+    showToast(`Error al guardar credenciales de Notion: ${err.message}`, "error");
+    sendNotionBtn.disabled = false;
+    sendNotionBtn.classList.remove("loading");
+  }
+});
+
 async function copyToClipboard() {
   try {
     await navigator.clipboard.writeText(output.textContent);
@@ -675,7 +556,6 @@ function downloadOutput() {
   }
 }
 
-// ✅ NUEVO: Función para copiar JSON para Figma
 async function copyJsonForFigma() {
   if (!lastStructuredData) {
     showToast("No hay datos estructurados para copiar", "error");
@@ -694,118 +574,306 @@ async function copyJsonForFigma() {
   }
 }
 
-function downloadOutput() {
-  try {
-    const content = lastGeneratedOutput || output.textContent;
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ux-output-${Date.now()}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    showToast("Archivo descargado", "success");
-  } catch (err) {
-    console.error("Download error:", err);
-    showToast("Error al descargar", "error");
-  }
-}
-
 // ============================================================================
 // KEYBOARD SHORTCUTS
 // ============================================================================
 
-function setupKeyboardShortcuts() {
-  let shortcutHintTimeout;
+document.addEventListener("keydown", (e) => {
+  const isMod = e.metaKey || e.ctrlKey;
   
-  document.addEventListener("keydown", (e) => {
-    const isMod = e.metaKey || e.ctrlKey;
-    
-    // Show shortcuts hint on Cmd/Ctrl press
-    if ((e.key === "Meta" || e.key === "Control") && shortcutsHint) {
-      clearTimeout(shortcutHintTimeout);
-      shortcutsHint.classList.add("show");
-    }
-    
-    // Cmd/Ctrl + Enter = Submit
-    if (isMod && e.key === "Enter") {
-      e.preventDefault();
-      if (!submitBtn.disabled) {
-        submitBtn.click();
-      }
-    }
-    
-    // Cmd/Ctrl + K = Copy
-    if (isMod && e.key === "k") {
-      e.preventDefault();
-      if (!copyBtn.disabled) {
-        copyBtn.click();
-      }
-    }
-  });
-  
-  document.addEventListener("keyup", (e) => {
-    if ((e.key === "Meta" || e.key === "Control") && shortcutsHint) {
-      shortcutHintTimeout = setTimeout(() => {
-        shortcutsHint.classList.remove("show");
-      }, 1000);
-    }
-  });
-}
-
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-function init() {
-  // Setup stages
-  renderStages(numStagesEl?.value || 3);
-  numStagesEl?.addEventListener("change", (e) => renderStages(e.target.value));
-  numStagesEl?.addEventListener("input", (e) => renderStages(e.target.value));
-  
-  // Setup character counters
-  setupCharCounters();
-  
-  // Setup realtime validation
-  setupRealtimeValidation();
-  
-  // Setup keyboard shortcuts
-  setupKeyboardShortcuts();
-  
-  // Load draft if exists
-  const draftLoaded = loadFormDraft();
-  
-  // Event listeners
-  form.addEventListener("submit", submitForm);
-  copyBtn.addEventListener("click", copyToClipboard);
-  downloadBtn.addEventListener("click", downloadOutput);
-  const copyJsonBtn = document.getElementById("copyJsonBtn");
-  if (copyJsonBtn) {
-    copyJsonBtn.addEventListener("click", copyJsonForFigma);
+  if (isMod && e.key === "Enter") {
+    e.preventDefault();
+    submitBtn.click();
   }
   
-  loadExampleBtn?.addEventListener("click", loadExampleData);
-  clearDraftBtn?.addEventListener("click", () => {
-    if (confirm("¿Seguro que quieres limpiar el borrador guardado?")) {
-      clearFormDraft();
+  if (isMod && e.key === "k") {
+    e.preventDefault();
+    copyBtn.click();
+  }
+  
+  // Show shortcuts hint
+  if (isMod) {
+    shortcutsHint.classList.add("show");
+  }
+});
+
+document.addEventListener("keyup", () => {
+  shortcutsHint.classList.remove("show");
+});
+
+// ============================================================================
+// LOAD EXAMPLE
+// ============================================================================
+
+if (loadExampleBtn) {
+  loadExampleBtn.addEventListener("click", async () => {
+    try {
+      if (Array.isArray(EXAMPLE_DATA.journeyStages)) {
+        const n = Math.max(1, Math.min(10, EXAMPLE_DATA.journeyStages.length));
+        numStagesInput.value = n;
+      }
+      generateStageInputs();
+      populateForm(EXAMPLE_DATA);
+
+      // Safety: ensure the journey stage fields are filled after generation
+      if (Array.isArray(EXAMPLE_DATA.journeyStages)) {
+        EXAMPLE_DATA.journeyStages.forEach((s, i) => {
+          const nameEl = document.getElementById(`stageName${i+1}`);
+          const whatEl = document.getElementById(`stageWhat${i+1}`);
+          if (nameEl) nameEl.value = s.nameTimeline || "";
+          if (whatEl) whatEl.value = s.whatHappens || "";
+        });
+      }
+
+      // Make the structured example data immediately available so users can
+      // copy the JSON or send directly to Notion without first calling Generate
+      lastStructuredData = JSON.parse(JSON.stringify(EXAMPLE_DATA)); // clone to avoid mutation
+      copyJsonBtn.disabled = false;
+      sendNotionBtn.disabled = false;
+
+      showToast("Ejemplo cargado - Ahora puedes generar el output", "success");
+    } catch (err) {
+      console.error("Error al cargar ejemplo:", err);
+      showToast("Error al cargar ejemplo", "error");
     }
   });
-  
-  // Save on page unload
-  window.addEventListener("beforeunload", () => {
-    saveFormDraft();
-  });
-  
-  console.log("UX Output Form initialized successfully");
-  console.log(`Draft ${draftLoaded ? "loaded" : "not found"}`);
+} else {
+  console.warn("loadExampleBtn not found in DOM");
 }
 
-// Start when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+// ============================================================================
+// CLEAR DRAFT
+// ============================================================================
+
+clearDraftBtn.addEventListener("click", () => {
+  if (confirm("¿Borrar borrador guardado? Esta acción no se puede deshacer.")) {
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
+    uxForm.reset();
+    output.textContent = "Aún no hay resultado.";
+    copyBtn.disabled = true;
+    downloadBtn.disabled = true;
+    copyJsonBtn.disabled = true;
+    generateStageInputs();
+    updateProgressBadge();
+  updateTabsCompletion();
+    showToast("Borrador eliminado", "success");
+  }
+});
+
+// ============================================================================
+// UI HELPERS
+// ============================================================================
+
+function showStatus(message, type = "default") {
+  // Implementar barra de estado si no existe
+  console.log(`[${type.toUpperCase()}] ${message}`);
+}
+
+function setStatus(message, type = "default") {
+  showStatus(message, type);
+}
+
+function showToast(message, type = "default") {
+  // Crear toast si no existe
+  let toast = document.querySelector(".toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  
+  toast.textContent = message;
+  toast.className = `toast ${type} show`;
+  
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+
+// ============================================================================
+// EVENT LISTENERS SETUP
+// ============================================================================
+
+function setupEventListeners() {
+  // Ya configurado arriba en los event listeners individuales
+}
+
+// ============================================================================
+// TABS NAVIGATION
+// ============================================================================
+
+function switchTab(sectionNum) {
+  sectionNum = parseInt(sectionNum);
+  if (isNaN(sectionNum) || sectionNum < 1 || sectionNum > 11) return;
+  
+  // Update cards visibility
+  document.querySelectorAll('.card[data-section]').forEach(card => {
+    card.classList.toggle('active', parseInt(card.dataset.section) === sectionNum);
+  });
+  
+  // Update tabs active state
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.toggle('active', parseInt(tab.dataset.section) === sectionNum);
+  });
+  
+  currentSection = sectionNum;
+  localStorage.setItem('uxForm_activeTab', sectionNum);
+}
+
+function updateTabsCompletion() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    // Skip section 11 (Generate) - no required fields
+    if (tab.dataset.section === '11') return;
+    const sectionNum = tab.dataset.section;
+    const isComplete = isSectionComplete(sectionNum);
+    tab.classList.toggle('complete', isComplete);
+  });
+}
+
+// Initialize tabs on load
+function initTabs() {
+  const savedTab = localStorage.getItem('uxForm_activeTab');
+  switchTab(savedTab || 1);
+  updateTabsCompletion();
+  
+  // Tab click handler
+  if (tabsNav) {
+    tabsNav.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tab')) {
+        switchTab(e.target.dataset.section);
+      }
+    });
+  }
+}
+
+// Keyboard navigation for tabs
+document.addEventListener('keydown', (e) => {
+  if (e.altKey && e.key === 'ArrowRight') {
+    e.preventDefault();
+    switchTab(Math.min(11, currentSection + 1));
+  }
+  if (e.altKey && e.key === 'ArrowLeft') {
+    e.preventDefault();
+    switchTab(Math.max(1, currentSection - 1));
+  }
+});
+
+// Initialize tabs when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTabs);
 } else {
-  init();
+  initTabs();
+}
+
+// Update tabs completion when form changes
+uxForm.addEventListener('input', updateTabsCompletion);
+uxForm.addEventListener('change', updateTabsCompletion);
+
+// ============================================================================
+// SECTION NAVIGATION BUTTONS
+// ============================================================================
+
+function addNavigationButtons() {
+  document.querySelectorAll('.card[data-section]').forEach(card => {
+    const sectionNum = parseInt(card.dataset.section);
+    
+    // Skip section 10 (has its own actions) and notionConfig
+    if (sectionNum === 11 || card.id === 'notionConfig') return;
+    
+    // Check if nav already exists
+    if (card.querySelector('.section-nav')) return;
+    
+    const nav = document.createElement('div');
+    nav.className = 'section-nav';
+    
+    if (sectionNum > 1) {
+      const prevBtn = document.createElement('button');
+      prevBtn.type = 'button';
+      prevBtn.className = 'btn secondary';
+      prevBtn.innerHTML = '← Anterior';
+      prevBtn.onclick = () => switchTab(sectionNum - 1);
+      nav.appendChild(prevBtn);
+    } else {
+      // Spacer for alignment
+      const spacer = document.createElement('div');
+      nav.appendChild(spacer);
+    }
+    
+    if (sectionNum < 11) {
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'btn';
+      nextBtn.innerHTML = 'Siguiente →';
+      nextBtn.onclick = () => switchTab(sectionNum + 1);
+      nav.appendChild(nextBtn);
+    }
+    
+    card.appendChild(nav);
+  });
+}
+
+// Add navigation buttons when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', addNavigationButtons);
+} else {
+  addNavigationButtons();
+}
+
+// ============================================================================
+// NOTION STATUS INDICATOR
+// ============================================================================
+
+function updateNotionStatus() {
+  const status = document.getElementById('notionStatus');
+  const token = notionTokenInput.value?.trim();
+  const pageId = notionPageIdInput.value?.trim();
+  
+  if (token && pageId) {
+    status.textContent = 'Configurado';
+    status.classList.add('connected');
+  } else if (token || pageId) {
+    status.textContent = 'Incompleto';
+    status.classList.remove('connected');
+  } else {
+    status.textContent = 'No configurado';
+    status.classList.remove('connected');
+  }
+}
+
+// Listen for changes in Notion fields
+notionTokenInput.addEventListener('input', updateNotionStatus);
+notionPageIdInput.addEventListener('input', updateNotionStatus);
+
+// Check status on load
+document.addEventListener('DOMContentLoaded', updateNotionStatus);
+
+// ============================================================================
+// OUTPUT SECTION UPDATE
+// ============================================================================
+
+function updateOutputSection(hasContent) {
+  const outputSection = document.getElementById('outputSection');
+  const meta = document.getElementById('meta');
+  
+  if (outputSection) {
+    if (hasContent) {
+      outputSection.classList.add('has-content');
+      if (meta) meta.textContent = 'Listo para copiar / pegar';
+    } else {
+      outputSection.classList.remove('has-content');
+      if (meta) meta.textContent = 'Genera tu brief para ver el resultado';
+    }
+  }
+}
+
+// Override the original output update to also update the section
+const originalOutput = output;
+if (originalOutput) {
+  const observer = new MutationObserver(() => {
+    const hasContent = originalOutput.textContent && 
+                       !originalOutput.textContent.includes('Haz clic en') &&
+                       !originalOutput.textContent.includes('Aún no hay');
+    updateOutputSection(hasContent);
+  });
+  observer.observe(originalOutput, { childList: true, characterData: true, subtree: true });
 }

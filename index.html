@@ -10,7 +10,7 @@
   <div class="container">
     <div class="header">
       <div>
-        <h1>UX Output Form</h1>
+        <h1>UX AI Generator</h1>
         <p class="sub">Llena el brief. Genero un output estructurado (Project Overview → Research → Flows).</p>
       </div>
       <div class="header-actions">
@@ -31,6 +31,22 @@
         </button>
       </div>
     </div>
+
+    <!-- TABS NAVIGATION -->
+    <nav class="tabs-nav" id="tabsNav">
+      <button type="button" class="tab active" data-section="1">1. Identity</button>
+      <button type="button" class="tab" data-section="2">2. Problem</button>
+      <button type="button" class="tab" data-section="3">3. Evidence</button>
+      <button type="button" class="tab" data-section="4">4. Value</button>
+      <button type="button" class="tab" data-section="5">5. Scope</button>
+      <button type="button" class="tab" data-section="6">6. Constraints</button>
+      <button type="button" class="tab" data-section="7">7. Metrics</button>
+      <button type="button" class="tab" data-section="8">8. Assumptions</button>
+      <button type="button" class="tab" data-section="9">9. Persona</button>
+      <button type="button" class="tab" data-section="10">10. Journey</button>
+      <button type="button" class="tab" data-section="11">Generate</button>
+    </nav>
+
 
     <div class="shell">
       <!-- LEFT: FORM -->
@@ -354,8 +370,21 @@
       <label for="opportunityAreas">Opportunity areas</label>
       <textarea id="opportunityAreas" name="opportunityAreas" required placeholder="¿Dónde podemos mejorar la experiencia?"></textarea>
     </div>
+  </div>
+
+  <!-- 11. GENERATE & EXPORT -->
+  <div class="card" data-section="11">
+    <div class="card-title">
+      <h2>Generate & Export</h2>
+      <div class="card-meta">
+        <span class="section-status" data-status="incomplete">○</span>
+        <span class="req">Final Step</span>
+      </div>
+    </div>
+
 
     <div class="actions">
+      
   <button class="btn" type="submit" id="submitBtn" aria-label="Generar output UX">
     <span class="btn-content">Generar</span>
   </button>
@@ -380,18 +409,83 @@
     </svg>
     <span class="btn-content">Copy JSON</span>
   </button>
-</div>
+  <button class="btn secondary" id="sendNotionBtn" type="button" disabled aria-label="Enviar a Notion">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2v20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M5 9l7-7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="btn-content">Enviar a Notion</span>
+  </button>
 
-      <button class="btn secondary" id="copyJsonBtn" type="button" disabled aria-label="Copiar JSON para Figma">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M8 2L2 6l6 4 6-4-6-4z" stroke="currentColor" stroke-width="1.5"/>
-    <path d="M2 10l6 4 6-4" stroke="currentColor" stroke-width="1.5"/>
-  </svg>
-  <span class="btn-content">Copy JSON</span>
-</button>
+  </div>
+
+  <!-- OUTPUT RESULT -->
+  <div class="output-section" id="outputSection">
+    <div class="output-header">
+      <strong>Resultado</strong>
+      <small id="meta">Genera tu brief para ver el resultado</small>
+    </div>
+    <div class="output-content">
+      <pre id="output" class="output">Haz clic en "Generar" para crear tu UX brief estructurado.</pre>
+    </div>
+  </div>
+
+
+    <div class="notion-config" id="notionConfig">
+      <div class="notion-header">
+        <h3>Enviar a Notion</h3>
+        <span class="notion-status" id="notionStatus">No configurado</span>
+      </div>
+      
+      <div class="notion-steps">
+        <div class="notion-step">
+          <span class="step-num">1</span>
+          <div class="step-content">
+            <strong>Crea una integración en Notion</strong>
+            <p>Ve a <a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a> → "New integration" → Copia el token</p>
+          </div>
+        </div>
+        
+        <div class="notion-step">
+          <span class="step-num">2</span>
+          <div class="step-content">
+            <strong>Conecta la integración a tu página</strong>
+            <p>Abre tu página en Notion → "..." → "Connections" → Agrega tu integración</p>
+          </div>
+        </div>
+        
+        <div class="notion-step">
+          <span class="step-num">3</span>
+          <div class="step-content">
+            <strong>Copia el ID de tu página</strong>
+            <p>Está en la URL: notion.so/<strong>este-es-el-id</strong>?v=...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="notion-fields">
+        <div class="field">
+          <label for="notionToken">Token de integración</label>
+          <input class="input" id="notionToken" name="notionToken" type="password" placeholder="secret_xxxxxxxxx..." />
+        </div>
+
+        <div class="field">
+          <label for="notionPageId">ID de página o base de datos</label>
+          <input class="input" id="notionPageId" name="notionPageId" placeholder="abc123def456..." />
+          <p class="hint">Pega el ID de la URL de tu página de Notion</p>
+        </div>
+        
+        <input type="hidden" id="notionDatabaseId" name="notionDatabaseId" value="" />
+
+        <div class="field">
+          <label class="checkbox-item">
+            <input type="checkbox" id="saveNotionCreds" />
+            <span>Recordar configuración</span>
+          </label>
+        </div>
+      </div>
     </div>
 
-    <div class="status" id="status"></div>
   </div>
 
 </form>
@@ -399,19 +493,6 @@
         </div>
       </section>
 
-      <!-- RIGHT: RESULT -->
-      <aside class="panel">
-        <div class="kpi">
-          <div class="badge">
-            <strong>Resultado</strong>
-            <small id="meta">Listo para copiar / pegar</small>
-          </div>
-          <div class="card">
-            <pre id="output" class="output">Aún no hay resultado.</pre>
-          </div>
-        </div>
-      </aside>
-    </div>
   </div>
 
   <!-- Keyboard shortcuts help tooltip -->
