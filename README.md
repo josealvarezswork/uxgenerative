@@ -1,4 +1,4 @@
-# UX Output Form - Versión Mejorada v2.0
+# Generative UX AI V1.0
 
 ## 🎯 Overview
 
