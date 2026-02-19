@@ -1,0 +1,13 @@
+{
+  "name": "UX Strategy Generator",
+  "id": "ux-strategy-generator-2024",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://broad-shadow-d8e2.josealvarezswork.workers.dev"
+    ]
+  }
+}

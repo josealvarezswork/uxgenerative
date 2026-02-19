@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UX Output Form</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>UX AI Generator</h1>
+        <p class="sub">Llena el brief. Genero un output estructurado (Project Overview → Research → Flows).</p>
+      </div>
+      <div class="header-actions">
+        <div class="progress-badge" id="progressBadge">
+          <span class="progress-text">0/10 secciones</span>
+        </div>
+        <button type="button" class="btn secondary" id="loadExampleBtn" title="Cargar ejemplo">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Ejemplo
+        </button>
+        <button type="button" class="btn secondary" id="clearDraftBtn" title="Limpiar borrador guardado">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1m2 0v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h10z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <nav class="tabs-nav" id="tabsNav">
+      <button type="button" class="tab active" data-section="1">1. Identity</button>
+      <button type="button" class="tab" data-section="2">2. Problem</button>
+      <button type="button" class="tab" data-section="3">3. Evidence</button>
+      <button type="button" class="tab" data-section="4">4. Value</button>
+      <button type="button" class="tab" data-section="5">5. Scope</button>
+      <button type="button" class="tab" data-section="6">6. Constraints</button>
+      <button type="button" class="tab" data-section="7">7. Metrics</button>
+      <button type="button" class="tab" data-section="8">8. Assumptions</button>
+      <button type="button" class="tab" data-section="9">9. Persona</button>
+      <button type="button" class="tab" data-section="10">10. Journey</button>
+      <button type="button" class="tab" data-section="11">Generate</button>
+    </nav>
+
+    <div class="shell">
+
+      <!-- LEFT: FORM -->
+      <section class="panel">
+        <div class="panel-inner">
+          <form id="uxForm" novalidate>
+
+            <!-- 1. PROJECT IDENTITY -->
+            <div class="card active" data-section="1">
+              <div class="card-title">
+                <h2>1. Project Identity</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="projectName">Project Name</label>
+                <input class="input" id="projectName" name="projectName" required placeholder="Good Manual" />
+              </div>
+
+              <div class="field">
+                <label for="oneSentence">One-sentence Description <span class="char-counter" data-max="200">0/200</span></label>
+                <input class="input" id="oneSentence" name="oneSentence" maxlength="200" required placeholder="App móvil para..." />
+              </div>
+
+              <div class="field">
+                <label for="productType">Product Type</label>
+                <select id="productType" name="productType" required>
+                  <option value="" selected disabled>Selecciona…</option>
+                  <option value="App">App</option>
+                  <option value="Platform">Platform</option>
+                  <option value="Service">Service</option>
+                  <option value="Tool">Tool</option>
+                  <option value="Hardware">Hardware</option>
+                  <option value="Hybrid">Hybrid</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Primary Platform(s)</label>
+                <div class="checkbox-grid" id="primaryPlatformsContainer">
+                  <label class="checkbox-item"><input type="checkbox" name="primaryPlatforms" value="Mobile" /><span>Mobile</span></label>
+                  <label class="checkbox-item"><input type="checkbox" name="primaryPlatforms" value="Web" /><span>Web</span></label>
+                  <label class="checkbox-item"><input type="checkbox" name="primaryPlatforms" value="Desktop" /><span>Desktop</span></label>
+                  <label class="checkbox-item"><input type="checkbox" name="primaryPlatforms" value="Tablet" /><span>Tablet</span></label>
+                  <label class="checkbox-item"><input type="checkbox" name="primaryPlatforms" value="Physical" /><span>Physical</span></label>
+                  <label class="checkbox-item"><input type="checkbox" name="primaryPlatforms" value="Hybrid" /><span>Hybrid</span></label>
+                </div>
+              </div>
+
+              <input type="hidden" name="status" value="Draft" />
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev" disabled>← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 2. PROBLEM & CONTEXT -->
+            <div class="card" data-section="2">
+              <div class="card-title">
+                <h2>2. Problem & Context</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="realWorldSituation">Real-world situation</label>
+                <textarea id="realWorldSituation" name="realWorldSituation" required placeholder="¿Qué está pasando hoy? ¿Quién lo vive? ¿Con qué frecuencia?"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="whatGoesWrong">What goes wrong?</label>
+                <textarea id="whatGoesWrong" name="whatGoesWrong" required placeholder="¿Qué falla y qué consecuencias tiene? (tiempo, costos, frustración)"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="currentWorkarounds">Current workarounds</label>
+                <textarea id="currentWorkarounds" name="currentWorkarounds" required placeholder="¿Qué hacen hoy? ¿Qué herramientas usan? ¿Por qué no funciona?"></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 3. USER EVIDENCE -->
+            <div class="card" data-section="3">
+              <div class="card-title">
+                <h2>3. User Evidence</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="userRoleContext">User role & context (not persona)</label>
+                <input class="input" id="userRoleContext" name="userRoleContext" required placeholder='Ej: "Técnicos aeronáuticos en hangar..."' />
+              </div>
+
+              <div class="field">
+                <label for="tryingToAccomplish">What they're trying to accomplish</label>
+                <textarea id="tryingToAccomplish" name="tryingToAccomplish" required placeholder="Objetivo + por qué importa"></textarea>
+              </div>
+
+              <div class="field">
+                <label>Research backing</label>
+                <div class="radio-list">
+                  <label class="radio"><input type="checkbox" name="researchBacking" value="User interviews" /><span>User interviews (n=__)</span></label>
+                  <label class="radio"><input type="checkbox" name="researchBacking" value="Surveys/Analytics" /><span>Surveys/Analytics (n=__)</span></label>
+                  <label class="radio"><input type="checkbox" name="researchBacking" value="Observation/Desk research" /><span>Observation/Desk research</span></label>
+                  <label class="radio"><input type="checkbox" name="researchBacking" value="No research yet (hypothesis)" /><span>No research yet (hypothesis)</span></label>
+                </div>
+                <label for="researchBackingDetails" style="margin-top: 14px; display: block;">Details</label>
+                <textarea id="researchBackingDetails" name="researchBackingDetails" required placeholder="Key findings or quotes (incluye n= si aplica)"></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 4. VALUE HYPOTHESIS -->
+            <div class="card" data-section="4">
+              <div class="card-title">
+                <h2>4. Value Hypothesis</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="desiredOutcome">Desired outcome (outcome + indicator)</label>
+                <textarea id="desiredOutcome" name="desiredOutcome" required placeholder="¿Cómo sería mejor? ¿Cómo sabría el usuario que funcionó?"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="whyUseThis">Why they'd use this</label>
+                <textarea id="whyUseThis" name="whyUseThis" required placeholder="Core value prop + cambio de comportamiento esperado"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="productGoals">Product Goals (pick 2-3, bullets)</label>
+                <textarea id="productGoals" name="productGoals" required placeholder="• Reducir tiempo de X a Y&#10;• Aumentar visibilidad de Z"></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 5. SCOPE -->
+            <div class="card" data-section="5">
+              <div class="card-title">
+                <h2>5. Scope</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="mustHaveFeatures">Must-Have Features (3-5 bullets)</label>
+                <textarea id="mustHaveFeatures" name="mustHaveFeatures" required placeholder="• ..."></textarea>
+              </div>
+
+              <div class="field">
+                <label for="niceToHave">Nice-to-Have <span style="color:var(--text-faint);font-weight:400">(optional)</span></label>
+                <textarea id="niceToHave" name="niceToHave" placeholder="• ..."></textarea>
+              </div>
+
+              <div class="field">
+                <label for="outOfScope">Out of Scope <span style="color:var(--text-faint);font-weight:400">(optional)</span></label>
+                <textarea id="outOfScope" name="outOfScope" placeholder="• ..."></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 6. CONSTRAINTS -->
+            <div class="card" data-section="6">
+              <div class="card-title">
+                <h2>6. Constraints</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="technicalPlatformConstraints">Technical & Platform</label>
+                <textarea id="technicalPlatformConstraints" name="technicalPlatformConstraints" required placeholder="Limitaciones técnicas, devices, APIs, performance needs"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="businessTimelineConstraints">Business & Timeline</label>
+                <textarea id="businessTimelineConstraints" name="businessTimelineConstraints" required placeholder="Budget, equipo, deadlines, stakeholders"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="adoptionRisks">Adoption Risks</label>
+                <textarea id="adoptionRisks" name="adoptionRisks" required placeholder="Barriers, competencia, resistencia al cambio"></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 7. SUCCESS METRICS -->
+            <div class="card" data-section="7">
+              <div class="card-title">
+                <h2>7. Success Metrics</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="keyMetrics">Key Metrics (2-4)</label>
+                <textarea id="keyMetrics" name="keyMetrics" required placeholder="Task completion: 45% → 80% en Q1&#10;Weekly retention: Target 60%"></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 8. ASSUMPTIONS CHECK -->
+            <div class="card" data-section="8">
+              <div class="card-title">
+                <h2>8. Assumptions Check</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="facts">What you KNOW (facts) — include source</label>
+                <textarea id="facts" name="facts" required placeholder="Hechos confirmados + fuente"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="assumptions">What you ASSUME</label>
+                <textarea id="assumptions" name="assumptions" required placeholder="Hipótesis clave que podrían ser falsas"></textarea>
+              </div>
+
+              <div class="field">
+                <label for="needsValidation">What needs validation</label>
+                <input class="input" id="needsValidation" name="needsValidation" required placeholder="Qué validar antes/después de diseñar" />
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 9. PERSONA ESSENTIALS -->
+            <div class="card" data-section="9">
+              <div class="card-title">
+                <h2>9. Persona Essentials</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="ageOccupation">Age range & Occupation</label>
+                <input class="input" id="ageOccupation" name="ageOccupation" required placeholder="25–35, Técnico de mantenimiento..." />
+              </div>
+
+              <div class="field">
+                <label for="techProficiency">Tech proficiency</label>
+                <select id="techProficiency" name="techProficiency" required>
+                  <option value="" selected disabled>Selecciona…</option>
+                  <option value="Savvy">Savvy</option>
+                  <option value="Comfortable">Comfortable</option>
+                  <option value="Basic">Basic</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="mainMotivations">Main motivations</label>
+                <input class="input" id="mainMotivations" name="mainMotivations" required placeholder="Seguridad, rapidez, precisión..." />
+              </div>
+
+              <div class="field">
+                <label for="dailyRoutineSnapshot">Daily routine snapshot</label>
+                <textarea id="dailyRoutineSnapshot" name="dailyRoutineSnapshot" required placeholder="¿Cómo es un día típico donde aparece este problema?"></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Siguiente →</button>
+              </div>
+            </div>
+
+            <!-- 10. JOURNEY STAGES -->
+            <div class="card" data-section="10">
+              <div class="card-title">
+                <h2>10. Journey Stages</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="numStages">Number of stages (default 3)</label>
+                <input class="input" type="number" id="numStages" name="numStages" min="3" max="5" value="3" required />
+                <p class="sub" style="margin-top:6px">Rango recomendado: 3–5.</p>
+              </div>
+
+              <div id="stagesContainer"></div>
+
+              <div class="field">
+                <label for="opportunityAreas">Opportunity areas</label>
+                <textarea id="opportunityAreas" name="opportunityAreas" required placeholder="¿Dónde podemos mejorar la experiencia?"></textarea>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+                <button type="button" class="btn" data-nav="next">Generate →</button>
+              </div>
+            </div>
+
+            <!-- 11. GENERATE & EXPORT -->
+            <div class="card" data-section="11">
+              <div class="card-title">
+                <h2>Generate & Export</h2>
+                <div class="card-meta">
+                  <span class="section-status" data-status="incomplete">○</span>
+                  <span class="req">Final Step</span>
+                </div>
+              </div>
+
+              <div class="actions">
+                <button class="btn" type="submit" id="submitBtn" aria-label="Generar output UX">
+                  <span class="btn-content">Generar</span>
+                </button>
+                <button class="btn secondary" id="copyBtn" type="button" disabled aria-label="Copiar resultado">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M3 11V3a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  <span class="btn-content">Copiar</span>
+                </button>
+                <button class="btn secondary" id="downloadBtn" type="button" disabled aria-label="Descargar resultado">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2v8m0 0l3-3m-3 3L5 7m9 5H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span class="btn-content">Descargar</span>
+                </button>
+                <button class="btn secondary" id="copyJsonBtn" type="button" disabled aria-label="Copiar JSON para Figma">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2L2 6l6 4 6-4-6-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M2 10l6 4 6-4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                  <span class="btn-content">Copy JSON</span>
+                </button>
+              </div>
+
+              <!-- Notion Config -->
+              <div class="notion-config" id="notionConfig">
+                <div class="notion-header">
+                  <h3>Enviar a Notion</h3>
+                  <span class="notion-status" id="notionStatus">No configurado</span>
+                </div>
+
+                <div class="notion-steps">
+                  <div class="notion-step">
+                    <span class="step-num">1</span>
+                    <div class="step-content">
+                      <strong>Crea una integración en Notion</strong>
+                      <p>Ve a <a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a> → "New integration" → Copia el token</p>
+                    </div>
+                  </div>
+                  <div class="notion-step">
+                    <span class="step-num">2</span>
+                    <div class="step-content">
+                      <strong>Conecta la integración a tu página</strong>
+                      <p>Abre tu página en Notion → "..." → "Connections" → Agrega tu integración</p>
+                    </div>
+                  </div>
+                  <div class="notion-step">
+                    <span class="step-num">3</span>
+                    <div class="step-content">
+                      <strong>Copia el ID de tu página</strong>
+                      <p>Está en la URL: notion.so/<strong>este-es-el-id</strong>?v=...</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="notion-fields">
+                  <div class="field">
+                    <label for="notionToken">Token de integración</label>
+                    <input class="input" id="notionToken" name="notionToken" type="password" placeholder="secret_xxxxxxxxx..." />
+                  </div>
+                  <div class="field">
+                    <label for="notionPageId">ID de página o base de datos</label>
+                    <input class="input" id="notionPageId" name="notionPageId" placeholder="abc123def456..." />
+                    <p class="hint">Pega el ID de la URL de tu página de Notion</p>
+                  </div>
+                  <input type="hidden" id="notionDatabaseId" name="notionDatabaseId" value="" />
+                  <div class="field">
+                    <label class="checkbox-item" style="width:auto;display:inline-flex">
+                      <input type="checkbox" id="saveNotionCreds" />
+                      <span>Recordar configuración</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div style="margin-top:14px">
+                  <button class="btn secondary" id="sendNotionBtn" type="button" disabled aria-label="Enviar a Notion" style="width:100%;justify-content:center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2v20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M5 9l7-7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="btn-content">Enviar a Notion</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="section-nav">
+                <button type="button" class="btn secondary" data-nav="prev">← Anterior</button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </section>
+
+      <!-- RIGHT: OUTPUT PANEL (always visible) -->
+      <aside class="output-panel" id="outputPanel">
+        <div class="output-panel-header">
+          <strong id="outputPanelLabel">Output</strong>
+          <span class="output-meta" id="meta">—</span>
+        </div>
+
+        <div class="output-panel-body" id="outputPanelBody">
+          <!-- Empty state -->
+          <div class="output-empty" id="outputEmpty">
+            <div class="output-empty-icon">✦</div>
+            <div>
+              <strong>Tu brief aparece aquí</strong>
+              <p>Completa las secciones y genera tu UX brief estructurado con un clic.</p>
+            </div>
+            <div class="output-preview-steps">
+              <div class="preview-step"><span class="preview-step-dot"></span>Project Overview</div>
+              <div class="preview-step"><span class="preview-step-dot"></span>Problem Statement</div>
+              <div class="preview-step"><span class="preview-step-dot"></span>User Research</div>
+              <div class="preview-step"><span class="preview-step-dot"></span>Value Hypothesis</div>
+              <div class="preview-step"><span class="preview-step-dot"></span>Scope & Constraints</div>
+              <div class="preview-step"><span class="preview-step-dot"></span>Success Metrics</div>
+              <div class="preview-step"><span class="preview-step-dot"></span>Persona & Journey</div>
+            </div>
+          </div>
+
+          <!-- Actual output (hidden until generated) -->
+          <pre id="output" class="output" style="display:none"></pre>
+        </div>
+
+        <div class="output-panel-actions" id="outputPanelActions" style="display:none">
+          <button class="btn secondary" id="copyBtnPanel" type="button" disabled>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3 11V3a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Copiar
+          </button>
+          <button class="btn secondary" id="downloadBtnPanel" type="button" disabled>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2v8m0 0l3-3m-3 3L5 7m9 5H2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Descargar
+          </button>
+          <button class="btn secondary" id="sendNotionBtnPanel" type="button" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2v20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M5 9l7-7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Notion
+          </button>
+        </div>
+      </aside>
+
+    </div><!-- /.shell -->
+  </div><!-- /.container -->
+
+  <!-- Keyboard shortcuts hint -->
+  <div class="shortcuts-hint" id="shortcutsHint">
+    <strong>Shortcuts:</strong> Cmd/Ctrl+Enter = Generar · Cmd/Ctrl+K = Copiar
+  </div>
+
+  <script src="./app.js"></script>
+
+</body>
+</html>
