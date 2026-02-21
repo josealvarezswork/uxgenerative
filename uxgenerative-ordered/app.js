@@ -36,7 +36,7 @@ const clearDraftBtn = document.getElementById("clearDraftBtn");
 const shortcutsHint = document.getElementById("shortcutsHint");
 const numStagesInput = document.getElementById("numStages");
 const stagesContainer = document.getElementById("stagesContainer");
-const tabsNav = document.getElementById("tabsNav"); console.log('DOM elements loaded');
+const sidebarNav = document.getElementById("sidebarNav"); console.log('DOM elements loaded');
 
 // ============================================================================
 // EXAMPLE DATA
@@ -138,23 +138,23 @@ function loadDraft() {
 function saveDraft() {
   const formData = new FormData(uxForm);
   const data = Object.fromEntries(formData);
-  
+
   // Handle checkboxes manually
   data.primaryPlatforms = Array.from(
     uxForm.querySelectorAll('input[name="primaryPlatforms"]:checked')
   ).map(el => el.value);
-  
+
   data.researchBacking = Array.from(
     uxForm.querySelectorAll('input[name="researchBacking"]:checked')
   ).map(el => el.value);
-  
+
   // Handle journey stages
   data.journeyStages = Array.from(stagesContainer.querySelectorAll('.journey-stage')).map((stage, idx) => ({
     index: idx + 1,
     nameTimeline: stage.querySelector('[name*="stageName"]').value,
     whatHappens: stage.querySelector('[name*="stageWhat"]').value,
   }));
-  
+
   localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
   showStatus("✓ Guardado automáticamente", "success");
 }
@@ -224,25 +224,139 @@ function populateForm(data) {
 
   updateProgressBadge();
   updateTabsCompletion();
-} 
+}
 
 // ============================================================================
-// AUTO-SAVE
+// AUTO-SAVE & LIVE PREVIEW
 // ============================================================================
+
+function updateLivePreview() {
+  const data = Object.fromEntries(new FormData(uxForm));
+
+  // Basic text fields
+  const fields = ['projectName', 'oneSentence', 'realWorldSituation', 'whatGoesWrong', 'currentWorkarounds',
+    'userRoleContext', 'tryingToAccomplish', 'desiredOutcome', 'whyUseThis',
+    'technicalPlatformConstraints', 'businessTimelineConstraints',
+    'ageOccupation', 'techProficiency', 'mainMotivations', 'dailyRoutineSnapshot'];
+
+  fields.forEach(f => {
+    const el = document.getElementById('pv_' + f);
+    if (el) el.textContent = data[f] || '—';
+  });
+
+  // Selects / Badges
+  const typeEl = document.getElementById('pv_productType');
+  if (typeEl) typeEl.textContent = data.productType || 'Type';
+
+  const plats = Array.from(uxForm.querySelectorAll('input[name="primaryPlatforms"]:checked')).map(el => el.value);
+  const platEl = document.getElementById('pv_primaryPlatforms');
+  if (platEl) platEl.textContent = plats.length ? plats.join(', ') : '';
+
+  // Textarea list -> Bullets
+  const formatBullets = (text) => {
+    if (!text) return '';
+    return text.split('\n').filter(l => l.trim()).map(l => `<div>• ${l.replace(/^[-•]\s*/, '')}</div>`).join('');
+  };
+
+  ['productGoals', 'mustHaveFeatures', 'keyMetrics'].forEach(f => {
+    const el = document.getElementById('pv_' + f);
+    if (el) el.innerHTML = formatBullets(data[f]) || '—';
+  });
+
+  // Quote
+  const research = Array.from(uxForm.querySelectorAll('input[name="researchBacking"]:checked')).map(el => el.value);
+  let researchText = research.length ? `[${research.join(', ')}] ` : '';
+  researchText += data.researchBackingDetails || '';
+  const rDetails = document.getElementById('pv_researchBackingDetails');
+  if (rDetails) rDetails.textContent = researchText || '—';
+
+  // Journey Track
+  let hasJourney = false;
+  const jTrack = document.getElementById('pv_journeyTrack');
+  if (jTrack) {
+    const stages = Array.from(stagesContainer.querySelectorAll('.journey-stage')).map((stage, idx) => ({
+      name: stage.querySelector('[name*="stageName"]').value,
+      what: stage.querySelector('[name*="stageWhat"]').value,
+    }));
+
+    if (stages.some(s => s.name || s.what)) {
+      hasJourney = true;
+      jTrack.innerHTML = stages.map(s => `
+        <div class="j-stage">
+          <h5>${s.name || `Stage`}</h5>
+          <p>${s.what || '...'}</p>
+        </div>
+      `).join('');
+    } else {
+      jTrack.innerHTML = '';
+    }
+  }
+
+  // Section Visibility Logic (hide empty sections)
+
+  const toggleSection = (id, conditions) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const hasRealContent = conditions.some(c => {
+        if (typeof c === 'string') return c.trim() !== '';
+        return !!c;
+      });
+      el.style.display = hasRealContent ? 'block' : 'none';
+    }
+  };
+
+  toggleSection('pv_sec_problem', [data.realWorldSituation, data.whatGoesWrong, data.currentWorkarounds]);
+  toggleSection('pv_sec_evidence', [data.userRoleContext, data.tryingToAccomplish, researchText]);
+  toggleSection('pv_sec_value', [data.desiredOutcome, data.whyUseThis, data.productGoals]);
+
+  const hasScopeOrConstraints = (data.mustHaveFeatures || data.technicalPlatformConstraints || data.businessTimelineConstraints);
+  toggleSection('pv_sec_scope', [hasScopeOrConstraints]);
+
+  toggleSection('pv_sec_metrics', [data.keyMetrics]);
+
+  const hasPersona = (data.ageOccupation || data.techProficiency || data.mainMotivations || data.dailyRoutineSnapshot);
+  toggleSection('pv_sec_persona', [hasPersona]);
+
+  toggleSection('pv_sec_journey', [hasJourney]);
+
+  // Header display specific
+  const docHeader = document.querySelector('.doc-header');
+  if (docHeader) docHeader.style.display = (data.projectName || data.oneSentence || data.productType || plats.length) ? 'block' : 'none';
+
+  // Toggle Visibility: If any meaningful data is entered, show preview, hide empty state
+  const hasData = Object.values(data).some(v => v.trim() !== '') || plats.length > 0 || hasJourney;
+  const emptyState = document.querySelector('.output-empty');
+  const livePreview = document.getElementById('livePreview');
+  const actualOutput = document.getElementById('output');
+
+  if (actualOutput && actualOutput.style.display !== 'none' && actualOutput.textContent.trim() !== '') {
+    // If we have AI generated result, don't show either
+    if (emptyState) emptyState.style.display = 'none';
+    if (livePreview) livePreview.style.display = 'none';
+  } else {
+    if (hasData) {
+      if (emptyState) emptyState.style.display = 'none';
+      if (livePreview) livePreview.style.display = 'flex';
+    } else {
+      if (emptyState) emptyState.style.display = 'flex';
+      if (livePreview) livePreview.style.display = 'none';
+    }
+  }
+}
 
 uxForm.addEventListener("input", () => {
   clearTimeout(autosaveTimer);
   autosaveTimer = setTimeout(saveDraft, CONFIG.AUTOSAVE_DELAY);
   updateProgressBadge();
   updateTabsCompletion();
-  updateSectionStatus();
+  updateLivePreview();
 });
 
 uxForm.addEventListener("change", () => {
   saveDraft();
   updateProgressBadge();
   updateTabsCompletion();
-  updateSectionStatus();
+  updateLivePreview();
 });
 
 // ============================================================================
@@ -252,7 +366,7 @@ uxForm.addEventListener("change", () => {
 function generateStageInputs() {
   const numStages = parseInt(numStagesInput.value) || 3;
   stagesContainer.innerHTML = "";
-  
+
   for (let i = 1; i <= numStages; i++) {
     const stageEl = document.createElement("div");
     stageEl.className = "journey-stage";
@@ -283,21 +397,21 @@ function setupCharCounters() {
     const counter = field.nextElementSibling?.classList.contains("char-counter")
       ? field.nextElementSibling
       : field.parentElement?.querySelector(".char-counter");
-    
+
     if (!counter) return;
-    
+
     function updateCounter() {
       const max = parseInt(counter.dataset.max) || parseInt(field.maxLength);
       const current = field.value.length;
       const percent = current / max;
-      
+
       counter.textContent = `${current}/${max}`;
       counter.classList.remove("warning", "limit");
-      
+
       if (percent >= 1) counter.classList.add("limit");
       else if (percent >= CONFIG.MAX_CHAR_WARNING) counter.classList.add("warning");
     }
-    
+
     field.addEventListener("input", updateCounter);
     updateCounter();
   });
@@ -310,7 +424,7 @@ function setupCharCounters() {
 function updateProgressBadge() {
   const sections = document.querySelectorAll(".card[data-section]");
   let complete = 0;
-  
+
   sections.forEach(section => {
     const sectionNum = section.dataset.section;
     if (isSectionComplete(sectionNum)) {
@@ -324,11 +438,11 @@ function updateProgressBadge() {
       section.querySelector(".section-status").textContent = "○";
     }
   });
-  
+
   const totalSections = sections.length;
   const badgeEl = progressBadge.querySelector(".progress-text");
   badgeEl.textContent = `${complete}/${totalSections} secciones`;
-  
+
   if (complete === totalSections) {
     progressBadge.classList.add("complete");
   } else {
@@ -339,7 +453,7 @@ function updateProgressBadge() {
 function isSectionComplete(sectionNum) {
   const section = document.querySelector(`.card[data-section="${sectionNum}"]`);
   const inputs = section.querySelectorAll("input[required], textarea[required], select[required]");
-  
+
   return Array.from(inputs).every(input => {
     if (input.type === "checkbox") {
       const group = section.querySelectorAll(`input[name="${input.name}"]`);
@@ -360,13 +474,13 @@ function updateSectionStatus() {
 
 submitBtn.addEventListener("click", async (e) => {
   e.preventDefault();
-  
+
   // Validate form
   if (!uxForm.checkValidity()) {
     showToast("Por favor completa todos los campos requeridos", "error");
     return;
   }
-  
+
   await submitForm();
 });
 
@@ -375,25 +489,25 @@ async function submitForm() {
     submitBtn.classList.add("loading");
     submitBtn.disabled = true;
     output.classList.add("loading");
-    
+
     const formData = new FormData(uxForm);
     const data = Object.fromEntries(formData);
-    
+
     // Handle arrays
     data.primaryPlatforms = Array.from(
       uxForm.querySelectorAll('input[name="primaryPlatforms"]:checked')
     ).map(el => el.value);
-    
+
     data.researchBacking = Array.from(
       uxForm.querySelectorAll('input[name="researchBacking"]:checked')
     ).map(el => el.value);
-    
+
     data.journeyStages = Array.from(stagesContainer.querySelectorAll(".journey-stage")).map((stage, idx) => ({
       index: idx + 1,
       nameTimeline: stage.querySelector('[id*="stageName"]').value,
       whatHappens: stage.querySelector('[id*="stageWhat"]').value,
     }));
-    
+
     // Form data saved for fallback
     const formDataBackup = data;
 
@@ -425,9 +539,14 @@ async function submitForm() {
     }
 
     // Display formatted output
+    if (emptyState) emptyState.style.display = 'none';
+    if (document.getElementById('livePreview')) document.getElementById('livePreview').style.display = 'none';
+    output.style.display = 'block';
+
     try {
       output.textContent = JSON.stringify(lastStructuredData, null, 2);
     } catch { output.textContent = lastGeneratedOutput; }
+
     output.classList.remove('loading');
 
     copyBtn.disabled = false;
@@ -436,7 +555,7 @@ async function submitForm() {
     sendNotionBtn.disabled = !lastStructuredData;
     showStatus('✓ Output generado', 'success');
     showToast('¡JSON estructurado listo!', 'success');
-    
+
   } catch (err) {
     console.error("Submit error:", err);
     output.classList.remove("loading");
@@ -499,7 +618,7 @@ sendNotionBtn.addEventListener("click", async () => {
 
       if (!res.ok) {
         const details = resBody?.details || resBody?.raw || JSON.stringify(resBody);
-        throw new Error(`Notion send failed: ${res.status} ${String(details).slice(0,200)}`);
+        throw new Error(`Notion send failed: ${res.status} ${String(details).slice(0, 200)}`);
       }
 
       // Show success and open page if Notion returns a URL
@@ -549,7 +668,7 @@ function downloadOutput() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     showToast("Archivo descargado", "success");
   } catch (err) {
     console.error("Download error:", err);
@@ -562,7 +681,7 @@ async function copyJsonForFigma() {
     showToast("No hay datos estructurados para copiar", "error");
     return;
   }
-  
+
   try {
     const jsonString = JSON.stringify(lastStructuredData, null, 2);
     await navigator.clipboard.writeText(jsonString);
@@ -581,17 +700,17 @@ async function copyJsonForFigma() {
 
 document.addEventListener("keydown", (e) => {
   const isMod = e.metaKey || e.ctrlKey;
-  
+
   if (isMod && e.key === "Enter") {
     e.preventDefault();
     submitBtn.click();
   }
-  
+
   if (isMod && e.key === "k") {
     e.preventDefault();
     copyBtn.click();
   }
-  
+
   // Show shortcuts hint
   if (isMod) {
     shortcutsHint.classList.add("show");
@@ -619,8 +738,8 @@ if (loadExampleBtn) {
       // Safety: ensure the journey stage fields are filled after generation
       if (Array.isArray(EXAMPLE_DATA.journeyStages)) {
         EXAMPLE_DATA.journeyStages.forEach((s, i) => {
-          const nameEl = document.getElementById(`stageName${i+1}`);
-          const whatEl = document.getElementById(`stageWhat${i+1}`);
+          const nameEl = document.getElementById(`stageName${i + 1}`);
+          const whatEl = document.getElementById(`stageWhat${i + 1}`);
           if (nameEl) nameEl.value = s.nameTimeline || "";
           if (whatEl) whatEl.value = s.whatHappens || "";
         });
@@ -631,6 +750,8 @@ if (loadExampleBtn) {
       lastStructuredData = JSON.parse(JSON.stringify(EXAMPLE_DATA)); // clone to avoid mutation
       copyJsonBtn.disabled = false;
       sendNotionBtn.disabled = false;
+
+      updateLivePreview();
 
       showToast("Ejemplo cargado - Ahora puedes generar el output", "success");
     } catch (err) {
@@ -651,12 +772,14 @@ clearDraftBtn.addEventListener("click", () => {
     localStorage.removeItem(CONFIG.STORAGE_KEY);
     uxForm.reset();
     output.textContent = "Aún no hay resultado.";
+    output.style.display = 'none';
     copyBtn.disabled = true;
     downloadBtn.disabled = true;
     copyJsonBtn.disabled = true;
     generateStageInputs();
     updateProgressBadge();
-  updateTabsCompletion();
+    updateTabsCompletion();
+    updateLivePreview();
     showToast("Borrador eliminado", "success");
   }
 });
@@ -682,10 +805,10 @@ function showToast(message, type = "default") {
     toast.className = "toast";
     document.body.appendChild(toast);
   }
-  
+
   toast.textContent = message;
   toast.className = `toast ${type} show`;
-  
+
   setTimeout(() => {
     toast.classList.remove("show");
   }, 3000);
@@ -700,54 +823,85 @@ function setupEventListeners() {
 }
 
 // ============================================================================
-// TABS NAVIGATION
+// SIDEBAR NAVIGATION
 // ============================================================================
 
 function switchTab(sectionNum) {
   sectionNum = parseInt(sectionNum);
   if (isNaN(sectionNum) || sectionNum < 1 || sectionNum > 11) return;
-  
+
   // Update cards visibility
   document.querySelectorAll('.card[data-section]').forEach(card => {
     card.classList.toggle('active', parseInt(card.dataset.section) === sectionNum);
   });
-  
-  // Update tabs active state
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.toggle('active', parseInt(tab.dataset.section) === sectionNum);
+
+  // Update sidebar active state
+  document.querySelectorAll('.sidebar-step').forEach(step => {
+    const isActive = parseInt(step.dataset.section) === sectionNum;
+    step.classList.toggle('active', isActive);
+    if (isActive) {
+      const group = step.closest('.phase-group');
+      if (group) {
+        document.querySelectorAll('.phase-group').forEach(g => g.classList.remove('active'));
+        group.classList.add('active');
+      }
+    }
   });
-  
+
   currentSection = sectionNum;
   localStorage.setItem('uxForm_activeTab', sectionNum);
 }
 
 function updateTabsCompletion() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    // Skip section 11 (Generate) - no required fields
-    if (tab.dataset.section === '11') return;
-    const sectionNum = tab.dataset.section;
+  document.querySelectorAll('.sidebar-step').forEach(step => {
+    // Skip section 11 (Generate)
+    if (step.dataset.section === '11') return;
+    const sectionNum = step.dataset.section;
     const isComplete = isSectionComplete(sectionNum);
-    tab.classList.toggle('complete', isComplete);
+    step.classList.toggle('complete', isComplete);
+  });
+  updatePhaseScores();
+}
+
+function updatePhaseScores() {
+  document.querySelectorAll('.phase-group').forEach(group => {
+    const steps = group.querySelectorAll('.sidebar-step:not([data-section="11"])');
+    if (steps.length === 0) return;
+    let complete = 0;
+    steps.forEach(s => {
+      if (s.classList.contains('complete')) complete++;
+    });
+    const scoreEl = group.querySelector('.phase-score');
+    if (scoreEl) scoreEl.textContent = `${complete}/${steps.length}`;
   });
 }
 
-// Initialize tabs on load
+// Initialize on load
 function initTabs() {
   const savedTab = localStorage.getItem('uxForm_activeTab');
   switchTab(savedTab || 1);
   updateTabsCompletion();
-  
-  // Tab click handler
-  if (tabsNav) {
-    tabsNav.addEventListener('click', (e) => {
-      if (e.target.classList.contains('tab')) {
-        switchTab(e.target.dataset.section);
+
+  // Sidebar click handler
+  if (sidebarNav) {
+    sidebarNav.addEventListener('click', (e) => {
+      const step = e.target.closest('.sidebar-step');
+      if (step) {
+        switchTab(step.dataset.section);
+      }
+
+      // Allow clicking phase-header to toggle group visibility optionally
+      const header = e.target.closest('.phase-header');
+      if (header) {
+        const group = header.closest('.phase-group');
+        document.querySelectorAll('.phase-group').forEach(g => g.classList.remove('active'));
+        group.classList.add('active');
       }
     });
   }
 }
 
-// Keyboard navigation for tabs
+// Keyboard navigation
 document.addEventListener('keydown', (e) => {
   if (e.altKey && e.key === 'ArrowRight') {
     e.preventDefault();
@@ -774,19 +928,30 @@ uxForm.addEventListener('change', updateTabsCompletion);
 // SECTION NAVIGATION BUTTONS
 // ============================================================================
 
+uxForm.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-nav]');
+  if (!btn) return;
+
+  if (btn.dataset.nav === 'prev') {
+    switchTab(Math.max(1, currentSection - 1));
+  } else if (btn.dataset.nav === 'next') {
+    switchTab(Math.min(11, currentSection + 1));
+  }
+});
+
 function addNavigationButtons_OLD() {
   document.querySelectorAll('.card[data-section]').forEach(card => {
     const sectionNum = parseInt(card.dataset.section);
-    
+
     // Skip section 10 (has its own actions) and notionConfig
     if (sectionNum === 11 || card.id === 'notionConfig') return;
-    
+
     // Check if nav already exists
     if (card.querySelector('.section-nav')) return;
-    
+
     const nav = document.createElement('div');
     nav.className = 'section-nav';
-    
+
     if (sectionNum > 1) {
       const prevBtn = document.createElement('button');
       prevBtn.type = 'button';
@@ -799,7 +964,7 @@ function addNavigationButtons_OLD() {
       const spacer = document.createElement('div');
       nav.appendChild(spacer);
     }
-    
+
     if (sectionNum < 11) {
       const nextBtn = document.createElement('button');
       nextBtn.type = 'button';
@@ -808,7 +973,7 @@ function addNavigationButtons_OLD() {
       nextBtn.onclick = () => switchTab(sectionNum + 1);
       nav.appendChild(nextBtn);
     }
-    
+
     card.appendChild(nav);
   });
 }
@@ -828,7 +993,7 @@ function updateNotionStatus() {
   const status = document.getElementById('notionStatus');
   const token = notionTokenInput.value?.trim();
   const pageId = notionPageIdInput.value?.trim();
-  
+
   if (token && pageId) {
     status.textContent = 'Configurado';
     status.classList.add('connected');
@@ -855,7 +1020,7 @@ document.addEventListener('DOMContentLoaded', updateNotionStatus);
 function updateOutputSection(hasContent) {
   const outputSection = document.getElementById('outputSection');
   const meta = document.getElementById('meta');
-  
+
   if (outputSection) {
     if (hasContent) {
       outputSection.classList.add('has-content');
@@ -871,9 +1036,9 @@ function updateOutputSection(hasContent) {
 const originalOutput = output;
 if (originalOutput) {
   const observer = new MutationObserver(() => {
-    const hasContent = originalOutput.textContent && 
-                       !originalOutput.textContent.includes('Haz clic en') &&
-                       !originalOutput.textContent.includes('Aún no hay');
+    const hasContent = originalOutput.textContent &&
+      !originalOutput.textContent.includes('Haz clic en') &&
+      !originalOutput.textContent.includes('Aún no hay');
     updateOutputSection(hasContent);
   });
   observer.observe(originalOutput, { childList: true, characterData: true, subtree: true });
@@ -893,52 +1058,52 @@ function initOutputPanel() {
   const downloadBtnPanel = document.getElementById("downloadBtnPanel");
   const sendNotionBtnPanel = document.getElementById("sendNotionBtnPanel");
   const meta = document.getElementById("meta");
-  
+
   // If panel elements don't exist, skip (backwards compatibility)
   if (!outputPanel || !output) return;
-  
+
   // Create MutationObserver to sync output with panel
   const panelObserver = new MutationObserver(() => {
     const content = output.textContent.trim();
     const isLoading = output.classList.contains('loading');
-    
+
     // Show/hide empty state
     if (isLoading || content) {
       if (outputEmpty) outputEmpty.style.display = 'none';
       output.style.display = 'block';
     }
-    
+
     // Update panel state when content is ready
     if (content && !isLoading) {
       outputPanel.classList.add('has-content');
       if (outputPanelActions) outputPanelActions.style.display = 'flex';
       if (outputPanelLabel) outputPanelLabel.textContent = 'Output ✓';
       if (meta) meta.textContent = 'Listo para copiar / pegar';
-      
+
       // Enable panel buttons
       if (copyBtnPanel) copyBtnPanel.disabled = false;
       if (downloadBtnPanel) downloadBtnPanel.disabled = false;
       if (sendNotionBtnPanel) sendNotionBtnPanel.disabled = false;
     }
   });
-  
+
   // Start observing output changes
   panelObserver.observe(output, { childList: true, subtree: true, characterData: true });
-  
+
   // Panel copy button
   if (copyBtnPanel) {
     copyBtnPanel.addEventListener('click', () => {
       copyToClipboard();
     });
   }
-  
+
   // Panel download button
   if (downloadBtnPanel) {
     downloadBtnPanel.addEventListener('click', () => {
       downloadOutput();
     });
   }
-  
+
   // Panel Notion button
   if (sendNotionBtnPanel) {
     sendNotionBtnPanel.addEventListener('click', () => {
@@ -951,7 +1116,7 @@ function initOutputPanel() {
       }
     });
   }
-  
+
   console.log('Output panel initialized');
 }
 
@@ -967,7 +1132,7 @@ if (document.readyState === 'loading') {
 // ============================================================================
 
 // Use event delegation on document for maximum reliability
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   const btn = e.target.closest('[data-nav]');
   if (!btn) return;
 
